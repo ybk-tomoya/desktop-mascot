@@ -95,7 +95,7 @@ final class Mascot: NSObject {
         case acting(MascotAction, t: Int, length: Int)
         case dragging(MascotAction?, t: Int)
         case falling(MascotAction?, velocity: CGFloat, t: Int)
-        case thrown(MascotAction?, vx: CGFloat, vy: CGFloat, t: Int, hard: Bool)
+        case thrown(MascotAction?, vx: CGFloat, vy: CGFloat, t: Int, strength: CGFloat)
         case fetching
     }
 
@@ -106,7 +106,7 @@ final class Mascot: NSObject {
     static let restRange = 200...500
     static let characterKey = "character"
     static let throwSpeed: CGFloat = 6
-    static let hardLanding: CGFloat = 8
+    static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
 
     let window: NSPanel
@@ -189,8 +189,9 @@ final class Mascot: NSObject {
             if let s = NSScreen.screens.first(where: { $0.frame.contains(center) }) {
                 screen = s
             }
-            if hypot(dragVelocity.dx, dragVelocity.dy) > Self.throwSpeed {
-                state = .thrown(character.randomAction(.throw), vx: dragVelocity.dx, vy: dragVelocity.dy, t: 0, hard: false)
+            let strength = hypot(dragVelocity.dx, dragVelocity.dy)
+            if strength > Self.throwSpeed {
+                state = .thrown(character.randomAction(.throw, strength: strength), vx: dragVelocity.dx, vy: dragVelocity.dy, t: 0, strength: strength)
             } else {
                 fall()
             }
@@ -393,7 +394,7 @@ final class Mascot: NSObject {
             dragDelta = .zero
             state = .dragging(a, t: t + 1)
 
-        case .thrown(let a, var vx, var vy, let t, var hard):
+        case .thrown(let a, var vx, var vy, let t, let strength):
             perform(a, t: t, length: 1)
             let area = self.area
             let size = window.frame.size
@@ -410,20 +411,15 @@ final class Mascot: NSObject {
             }
             if y <= area.minY {
                 y = area.minY
-                if -vy > Self.hardLanding {
+                if -vy > Self.bounceSpeed {
                     vy = -vy * 0.45
                     vx *= 0.7
-                    hard = true
                 } else {
-                    if hard, let land = character.randomAction(.land) {
-                        start(land)
-                    } else {
-                        state = .idle(ticks: Int.random(in: Self.restRange))
-                    }
+                    start(character.randomAction(.land, strength: strength))
                     break
                 }
             }
-            state = .thrown(a, vx: vx, vy: vy, t: t + 1, hard: hard)
+            state = .thrown(a, vx: vx, vy: vy, t: t + 1, strength: strength)
 
         case .fetching:
             guard let s = snack else {

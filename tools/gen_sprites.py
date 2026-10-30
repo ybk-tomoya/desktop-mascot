@@ -54,6 +54,8 @@ def check(mod, data):
             for kind, key in (("faces", "face"), ("arms", "arms"), ("legs", "legs")):
                 if key in f and f[key] not in data[kind]:
                     fail(f"{where}: unknown {key} '{f[key]}'")
+        if "strength" in a and not (len(a["strength"]) == 2 and a["strength"][0] <= a["strength"][1]):
+            fail(f"{where}: strength must be (min, max)")
         if "lift" in a and a["lift"]["type"] not in engine.LIFTS:
             fail(f"{where}: lift type must be one of {engine.LIFTS}")
         if "effect" in a and a["effect"]["glyph"] not in glyphs:
@@ -111,9 +113,10 @@ def action(a):
         e = a["effect"]
         effect = f"MascotEffect(glyph: {s(e['glyph'])}, period: {e.get('period', 'nil')}, until: {e.get('until', 'nil')}, dx: {e.get('dx', [0])})"
     duration = f"{a['duration'][0]}...{a['duration'][1]}" if "duration" in a else "nil"
+    strength = f"{a['strength'][0]}...{a['strength'][1]}" if "strength" in a else "nil"
     nxt = "[" + ", ".join(f"({s(k)}, {v})" for k, v in a.get("next", {}).items()) + "]" if a.get("next") else "[]"
     return (f"        MascotAction(name: {s(a['name'])}, trigger: .{a['trigger']}, weight: {a.get('weight', 1)}, "
-            f"walk: {str(a.get('walk', False)).lower()}, duration: {duration},\n"
+            f"walk: {str(a.get('walk', False)).lower()}, duration: {duration}, strength: {strength},\n"
             f"                     frames: [{frames}],\n"
             f"                     lift: {lift}, effect: {effect}, next: {nxt}),\n")
 

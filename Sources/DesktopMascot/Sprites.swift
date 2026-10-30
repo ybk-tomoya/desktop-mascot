@@ -63,6 +63,7 @@ struct MascotAction {
     let weight: Int
     let walk: Bool
     let duration: ClosedRange<Int>?
+    let strength: ClosedRange<CGFloat>?
     let frames: [MascotPose]
     let lift: MascotLift?
     let effect: MascotEffect?
@@ -119,8 +120,10 @@ struct MascotCharacter {
         actions.first { $0.name == name }
     }
 
-    func randomAction(_ trigger: MascotAction.Trigger) -> MascotAction? {
-        let candidates = actions.filter { $0.trigger == trigger }
+    func randomAction(_ trigger: MascotAction.Trigger, strength: CGFloat? = nil) -> MascotAction? {
+        let candidates = actions.filter { a in
+            a.trigger == trigger && (strength.map { s in a.strength?.contains(s) ?? true } ?? true)
+        }
         var r = Int.random(in: 0..<max(1, candidates.reduce(0) { $0 + $1.weight }))
         for a in candidates {
             if r < a.weight { return a }
