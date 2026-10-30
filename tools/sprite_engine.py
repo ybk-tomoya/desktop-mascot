@@ -58,6 +58,8 @@ CLASS = {
     "capdome": "cap", "capband": "capband", "brim": "brim", "frame": "frame", "glint": "glint",
     "loop": "loop", "knot": "knot", "tee": "shirt", "emblem": "shirt", "hoodie": "pajama", "hood": "hood", "pocket": "pocket",
     "denim": "shorts",
+    "strap": "strap", "collar": "collar", "cardigan": "cardigan", "turtle": "turtle", "dress": "dress", "sash": "sash",
+    "tights": "tights", "boot": "boot", "farboot": "boot", "sneaker": "shoe", "slipper": "slipper",
 }
 
 
