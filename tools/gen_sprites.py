@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import sys
 from pathlib import Path
 
@@ -16,30 +17,65 @@ def load(path):
     return mod
 
 
+def glyphs_of(mod):
+    return {**engine.GLYPHS, **getattr(mod, "GLYPHS", {})}
+
+
 def check(mod, data):
-    rows = [data["body"], *data["faces"].values(), *data["arms"].values(), *data["legs"].values()]
+    def fail(msg):
+        raise SystemExit(f"{mod.ID}: {msg}")
+
+    layers = [data["body"], *data["faces"].values(), *data["arms"].values(), *data["legs"].values()]
     for side in ("right", "left"):
         s = data[side]
-        rows += [s["body"], s["face"], s["blink"], *s["legs"], *s["arms"]]
-    for r in rows:
-        assert len(r) == mod.H and all(len(x) == mod.W for x in r), f"{mod.ID}: layer size must be {mod.W}x{mod.H}"
-    assert set(data["faces"]) == set(engine.FACES), f"{mod.ID}: faces must be {engine.FACES}"
-    assert set(data["arms"]) == set(engine.ARMS), f"{mod.ID}: arms must be {engine.ARMS}"
-    assert set(data["legs"]) == set(engine.LEGS), f"{mod.ID}: legs must be {engine.LEGS}"
-    for side in ("right", "left"):
-        assert len(data[side]["legs"]) == len(data[side]["arms"]) == engine.WALK_STEPS
-    used = {c for r in rows for line in r for c in line} - {"."}
-    missing = used - set(mod.PALETTE)
-    assert not missing, f"{mod.ID}: colors missing from PALETTE: {sorted(missing)}"
+        layers += [s["body"], s["face"], s["blink"], *s["legs"], *s["arms"]]
+        if not len(s["legs"]) == len(s["arms"]) == engine.WALK_STEPS:
+            fail(f"{side} walk needs {engine.WALK_STEPS} legs and arms frames")
+    for r in layers:
+        if len(r) != mod.H or any(len(x) != mod.W for x in r):
+            fail(f"every layer must be {mod.W}x{mod.H}")
+    for kind, names in engine.REQUIRED.items():
+        for n in names:
+            if n not in data[kind]:
+                fail(f"{kind} must include '{n}'")
+    missing = {c for r in layers for line in r for c in line} - {"."} - set(mod.PALETTE)
+    if missing:
+        fail(f"colors missing from PALETTE: {sorted(missing)}")
+
+    glyphs = glyphs_of(mod)
+    names = {a["name"] for a in mod.ACTIONS}
+    for a in mod.ACTIONS:
+        where = f"action '{a['name']}'"
+        if a["trigger"] not in engine.TRIGGERS:
+            fail(f"{where}: trigger must be one of {engine.TRIGGERS}")
+        if not a.get("walk") and not a.get("frames"):
+            fail(f"{where}: needs frames (or walk: True)")
+        for f in a.get("frames", []):
+            for kind, key in (("faces", "face"), ("arms", "arms"), ("legs", "legs")):
+                if key in f and f[key] not in data[kind]:
+                    fail(f"{where}: unknown {key} '{f[key]}'")
+        if "lift" in a and a["lift"]["type"] not in engine.LIFTS:
+            fail(f"{where}: lift type must be one of {engine.LIFTS}")
+        if "effect" in a and a["effect"]["glyph"] not in glyphs:
+            fail(f"{where}: unknown glyph '{a['effect']['glyph']}'")
+        for n in a.get("next", {}):
+            if n not in names:
+                fail(f"{where}: next action '{n}' does not exist")
+    if not any(a["trigger"] == "idle" for a in mod.ACTIONS):
+        fail("needs at least one idle action")
+
+
+def s(v):
+    return json.dumps(v, ensure_ascii=False)
 
 
 def arr(rows, ind):
-    return "\n".join(f'{ind}"{r}",' for r in rows)
+    return "\n".join(f"{ind}{s(r)}," for r in rows)
 
 
-def switch(name, enum, cases):
-    body = "".join(f"        case .{k}: [\n{arr(v, '            ')}\n        ]\n" for k, v in cases.items())
-    return f"    static func {name}(_ value: {enum}) -> [String] {{\n        switch value {{\n{body}        }}\n    }}\n"
+def table(name, layers):
+    body = "".join(f"        {s(k)}: [\n{arr(v, '            ')}\n        ],\n" for k, v in layers.items())
+    return f"    static let {name}: [String: [String]] = [\n{body}    ]\n"
 
 
 def nested(name, layers):
@@ -47,57 +83,93 @@ def nested(name, layers):
     return f"    static let {name} = [\n{body}    ]\n"
 
 
+def palette(name, colors):
+    rows = "".join(f'        "{k}": NSColor(srgbRed: {r:.2f}, green: {g:.2f}, blue: {b:.2f}, alpha: 1),\n' for k, (r, g, b) in colors.items())
+    return f"    static let {name}: [Character: NSColor] = [\n{rows}    ]\n"
+
+
+def action(a):
+    frames = ", ".join(
+        f"MascotPose(face: {s(f['face']) if 'face' in f else 'nil'}, arms: {s(f.get('arms', 'down'))}, legs: {s(f.get('legs', 'stand'))}, ticks: {f.get('ticks', 1)})"
+        for f in a.get("frames", [])
+    )
+    lift = "nil"
+    if "lift" in a:
+        l = a["lift"]
+        lift = {
+            "jump": lambda: f".jump(height: {l['height']})",
+            "hop": lambda: f".hop(height: {l['height']}, period: {l['period']})",
+            "rise": lambda: f".rise(height: {l['height']}, from: {l['from']}, to: {l['to']})",
+        }[l["type"]]()
+    effect = "nil"
+    if "effect" in a:
+        e = a["effect"]
+        effect = f"MascotEffect(glyph: {s(e['glyph'])}, period: {e.get('period', 'nil')}, until: {e.get('until', 'nil')}, dx: {e.get('dx', [0])})"
+    duration = f"{a['duration'][0]}...{a['duration'][1]}" if "duration" in a else "nil"
+    nxt = "[" + ", ".join(f"({s(k)}, {v})" for k, v in a.get("next", {}).items()) + "]" if a.get("next") else "[]"
+    return (f"        MascotAction(name: {s(a['name'])}, trigger: .{a['trigger']}, weight: {a.get('weight', 1)}, "
+            f"walk: {str(a.get('walk', False)).lower()}, duration: {duration},\n"
+            f"                     frames: [{frames}],\n"
+            f"                     lift: {lift}, effect: {effect}, next: {nxt}),\n")
+
+
 def emit(mod, data):
     t = mod.ID[0].upper() + mod.ID[1:] + "Sprites"
-    palette = "".join(f'        "{k}": NSColor(srgbRed: {r:.2f}, green: {g:.2f}, blue: {b:.2f}, alpha: 1),\n' for k, (r, g, b) in mod.PALETTE.items())
+    glyph_palette = {**engine.GLYPH_PALETTE, **getattr(mod, "GLYPH_PALETTE", {})}
     out = f'''// Generated by tools/gen_sprites.py from tools/characters/{mod.ID}.py. Do not edit.
 import AppKit
 
 @MainActor
 enum {t} {{
-    static let palette: [Character: NSColor] = [
-{palette}    ]
-
+{palette("palette", mod.PALETTE)}
+{palette("glyphPalette", glyph_palette)}
     static let body = [
 {arr(data["body"], "        ")}
     ]
 
-{switch("face", "Face", data["faces"])}
-{switch("arms", "Arms", data["arms"])}
-{switch("legs", "Legs", data["legs"])}
+{table("faces", data["faces"])}
+{table("arms", data["arms"])}
+{table("legs", data["legs"])}
+{table("glyphs", glyphs_of(mod))}
+    static let actions = [
+{"".join(action(a) for a in mod.ACTIONS)}    ]
+
 '''
     for side in ("right", "left"):
-        s = data[side]
+        sd = data[side]
         out += f'''    static let {side}Body = [
-{arr(s["body"], "        ")}
+{arr(sd["body"], "        ")}
     ]
 
     static let {side}Face = [
-{arr(s["face"], "        ")}
+{arr(sd["face"], "        ")}
     ]
 
     static let {side}Blink = [
-{arr(s["blink"], "        ")}
+{arr(sd["blink"], "        ")}
     ]
 
-{nested(side + "Legs", s["legs"])}
-{nested(side + "Arms", s["arms"])}
+{nested(side + "Legs", sd["legs"])}
+{nested(side + "Arms", sd["arms"])}
 '''
     out = out.rstrip() + "\n}\n"
-    side = lambda s: f"SideSprites(body: {t}.{s}Body, face: {t}.{s}Face, blink: {t}.{s}Blink, legs: {t}.{s}Legs, arms: {t}.{s}Arms)"
+    side = lambda x: f"SideSprites(body: {t}.{x}Body, face: {t}.{x}Face, blink: {t}.{x}Blink, legs: {t}.{x}Legs, arms: {t}.{x}Arms)"
+    drops = "[" + ", ".join(f"{s(k)}: {v}" for k, v in data.get("drops", {}).items()) + "]" if data.get("drops") else "[:]"
     out += f'''
 extension MascotCharacter {{
     static let {mod.ID} = MascotCharacter(
-        id: "{mod.ID}",
-        name: "{mod.NAME}",
+        id: {s(mod.ID)},
+        name: {s(mod.NAME)},
         width: {mod.W},
-        sitDrop: {mod.SIT_DROP},
-        canDrum: {str(mod.DRUMS).lower()},
         palette: {t}.palette,
+        glyphPalette: {t}.glyphPalette,
         body: {t}.body,
-        face: {t}.face,
+        faces: {t}.faces,
         arms: {t}.arms,
         legs: {t}.legs,
+        drops: {drops},
+        glyphs: {t}.glyphs,
+        actions: {t}.actions,
         right: {side("right")},
         left: {side("left")}
     )
@@ -108,6 +180,8 @@ extension MascotCharacter {{
 
 def main():
     OUT.mkdir(exist_ok=True)
+    for old in OUT.glob("*.swift"):
+        old.unlink()
     mods = sorted((load(p) for p in (ROOT / "characters").glob("*.py")), key=lambda m: (m.ORDER, m.ID))
     for mod in mods:
         engine.configure(mod.W, mod.H, mod.OY)

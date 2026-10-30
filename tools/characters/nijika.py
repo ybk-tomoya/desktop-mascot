@@ -3,9 +3,9 @@ from sprite_engine import *
 ID = "nijika"
 NAME = "伊地知虹夏"
 W, H, OY = 48, 72, 4
-SIT_DROP = 14
 ORDER = 0
-DRUMS = True
+ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace")
+LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
 configure(W, H, OY)
 
 PALETTE = {
@@ -282,6 +282,36 @@ def build():
         "faces": front_faces(),
         "arms": {k: front_arms(k) for k in ARMS},
         "legs": {k: front_legs(k) for k in LEGS},
+        "drops": {"sit": 14},
         "right": sides["right"],
         "left": sides["left"],
     }
+
+
+ACTIONS = [
+    {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},
+    {"name": "drum", "trigger": "idle", "weight": 3, "duration": (60, 140),
+     "frames": [{"face": "happy", "arms": "drumLeft", "ticks": 3}, {"face": "happy", "arms": "drumRight", "ticks": 3}],
+     "effect": {"glyph": "note", "period": 24, "dx": [-20, 20]}},
+    {"name": "stretch", "trigger": "idle", "weight": 2, "duration": (50, 50),
+     "frames": [{"face": "yawn", "arms": "bothUp"}],
+     "lift": {"type": "rise", "height": 4, "from": 10, "to": 40},
+     "next": {"sleep": 1 / 3}},
+    {"name": "hop", "trigger": "idle", "weight": 2, "duration": (45, 45),
+     "frames": [{"face": "happy", "legs": "together"}],
+     "lift": {"type": "hop", "height": 12, "period": 15}},
+    {"name": "sleep", "trigger": "idle", "weight": 1, "duration": (200, 400),
+     "frames": [{"face": "blink", "legs": "sit"}],
+     "effect": {"glyph": "zzz", "period": 40, "dx": [16]}},
+    {"name": "happy", "trigger": "click", "weight": 1, "duration": (30, 30),
+     "frames": [{"face": "happy"}],
+     "lift": {"type": "jump", "height": 16},
+     "effect": {"glyph": "heart", "dx": [0]}},
+    {"name": "peace", "trigger": "click", "weight": 1, "duration": (40, 40),
+     "frames": [{"face": "wink", "arms": "peace"}],
+     "effect": {"glyph": "heart", "until": 20, "dx": [-16]}},
+    {"name": "flail", "trigger": "drag",
+     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
+                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
+    {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
+]

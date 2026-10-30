@@ -3,10 +3,23 @@ import math
 W, H, OY = 0, 0, 0
 YR = range(0)
 
-FACES = ("normal", "blink", "happy", "panic", "wink", "yawn", "lookLeft", "lookRight")
-ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace")
-LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
 WALK_STEPS = 4
+REQUIRED = {"faces": ("normal", "blink"), "arms": ("down",), "legs": ("stand",)}
+TRIGGERS = ("idle", "click", "drag", "fall", "chained")
+LIFTS = ("jump", "hop", "rise")
+
+GLYPH_PALETTE = {
+    "K": (0.20, 0.13, 0.17),
+    "R": (0.92, 0.32, 0.42),
+    "W": (1.00, 1.00, 1.00),
+    "D": (0.24, 0.29, 0.52),
+}
+
+GLYPHS = {
+    "heart": [".KK.KK.", "KRRKRRK", "KRWRRRK", ".KRRRK.", "..KRK..", "...K..."],
+    "note": ["..KK.", "..KKK", "..K.K", "KKK..", "KKK.."],
+    "zzz": ["DDDDD", "...D.", "..D..", ".D...", "DDDDD"],
+}
 
 
 def configure(w, h, oy):

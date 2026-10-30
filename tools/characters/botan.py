@@ -3,9 +3,9 @@ from sprite_engine import *
 ID = "botan"
 NAME = "上伊那ぼたん"
 W, H, OY = 48, 72, 4
-SIT_DROP = 14
 ORDER = 1
-DRUMS = False
+ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace")
+LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
 configure(W, H, OY)
 
 PALETTE = {
@@ -89,8 +89,6 @@ def front_arms(kind):
     up_r = (RS, (36, 25), (37, 18))
     poses = {
         "down": (down_l, down_r),
-        "drumLeft": ((LS, (12, 31), (12, 24)), (RS, (34, 37), (30, 40))),
-        "drumRight": ((LS, (14, 37), (18, 40)), (RS, (36, 31), (36, 24))),
         "flailLeft": (up_l, (RS, (35, 37), (38, 42))),
         "flailRight": ((LS, (13, 37), (10, 42)), up_r),
         "bothUp": (up_l, up_r),
@@ -274,6 +272,33 @@ def build():
         "faces": front_faces(),
         "arms": {k: front_arms(k) for k in ARMS},
         "legs": {k: front_legs(k) for k in LEGS},
+        "drops": {"sit": 14},
         "right": sides["right"],
         "left": sides["left"],
     }
+
+
+ACTIONS = [
+    {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},
+    {"name": "stretch", "trigger": "idle", "weight": 2, "duration": (50, 50),
+     "frames": [{"face": "yawn", "arms": "bothUp"}],
+     "lift": {"type": "rise", "height": 4, "from": 10, "to": 40},
+     "next": {"sleep": 1 / 3}},
+    {"name": "hop", "trigger": "idle", "weight": 5, "duration": (45, 45),
+     "frames": [{"face": "happy", "legs": "together"}],
+     "lift": {"type": "hop", "height": 12, "period": 15}},
+    {"name": "sleep", "trigger": "idle", "weight": 1, "duration": (200, 400),
+     "frames": [{"face": "blink", "legs": "sit"}],
+     "effect": {"glyph": "zzz", "period": 40, "dx": [16]}},
+    {"name": "happy", "trigger": "click", "weight": 1, "duration": (30, 30),
+     "frames": [{"face": "happy"}],
+     "lift": {"type": "jump", "height": 16},
+     "effect": {"glyph": "heart", "dx": [0]}},
+    {"name": "peace", "trigger": "click", "weight": 1, "duration": (40, 40),
+     "frames": [{"face": "wink", "arms": "peace"}],
+     "effect": {"glyph": "heart", "until": 20, "dx": [-16]}},
+    {"name": "flail", "trigger": "drag",
+     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
+                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
+    {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
+]

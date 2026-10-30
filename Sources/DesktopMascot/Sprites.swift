@@ -1,17 +1,5 @@
 import AppKit
 
-enum Face {
-    case normal, blink, happy, panic, wink, yawn, lookLeft, lookRight
-}
-
-enum Legs {
-    case stand, together, sit, kickLeft, kickRight
-}
-
-enum Arms {
-    case down, drumLeft, drumRight, flailLeft, flailRight, bothUp, peace
-}
-
 struct SideSprites {
     let body: [String]
     let face: [String]
@@ -20,32 +8,119 @@ struct SideSprites {
     let arms: [[String]]
 }
 
+struct MascotPose {
+    let face: String?
+    let arms: String
+    let legs: String
+    let ticks: Int
+}
+
+enum MascotLift {
+    case jump(height: CGFloat)
+    case hop(height: CGFloat, period: Int)
+    case rise(height: CGFloat, from: Int, to: Int)
+
+    func offset(t: Int, length: Int) -> CGFloat {
+        switch self {
+        case .jump(let h):
+            let p = CGFloat(t) / CGFloat(length)
+            return max(0, sin(min(p * 2, 1) * .pi) * h)
+        case .hop(let h, let period):
+            return sin(CGFloat(t % period) / CGFloat(period) * .pi) * h
+        case .rise(let h, let from, let to):
+            return t > from && t < to ? h : 0
+        }
+    }
+}
+
+struct MascotEffect {
+    let glyph: String
+    let period: Int?
+    let until: Int?
+    let dx: [CGFloat]
+
+    func state(t: Int, length: Int) -> (progress: CGFloat, dx: CGFloat)? {
+        if let until, t >= until { return nil }
+        if let period {
+            return (CGFloat(t % period) / CGFloat(period), dx[(t / period) % dx.count])
+        }
+        return (CGFloat(t) / CGFloat(until ?? length), dx[0])
+    }
+}
+
+struct MascotAction {
+    enum Trigger {
+        case idle, click, drag, fall, chained
+    }
+
+    let name: String
+    let trigger: Trigger
+    let weight: Int
+    let walk: Bool
+    let duration: ClosedRange<Int>?
+    let frames: [MascotPose]
+    let lift: MascotLift?
+    let effect: MascotEffect?
+    let next: [(String, Double)]
+
+    var cycle: Int { frames.reduce(0) { $0 + $1.ticks } }
+
+    func randomLength() -> Int {
+        duration.map { Int.random(in: $0) } ?? cycle
+    }
+
+    func pose(at t: Int) -> MascotPose {
+        var r = t % cycle
+        for f in frames {
+            if r < f.ticks { return f }
+            r -= f.ticks
+        }
+        return frames[0]
+    }
+}
+
 @MainActor
 struct MascotCharacter {
     let id: String
     let name: String
     let width: Int
-    let sitDrop: Int
-    let canDrum: Bool
     let palette: [Character: NSColor]
+    let glyphPalette: [Character: NSColor]
     let body: [String]
-    let face: (Face) -> [String]
-    let arms: (Arms) -> [String]
-    let legs: (Legs) -> [String]
+    let faces: [String: [String]]
+    let arms: [String: [String]]
+    let legs: [String: [String]]
+    let drops: [String: Int]
+    let glyphs: [String: [String]]
+    let actions: [MascotAction]
     let right: SideSprites
     let left: SideSprites
 
     var height: Int { body.count }
 
-    func frame(face f: Face, arms a: Arms = .down, legs l: Legs) -> [String] {
-        let upper = Sprites.overlay([body, arms(a), face(f)])
-        return Sprites.overlay([legs(l), l == .sit ? Sprites.lowered(upper, by: sitDrop) : upper])
+    func frame(face f: String, arms a: String, legs l: String) -> [String] {
+        let upper = Sprites.overlay([body, arms[a] ?? arms["down"]!, faces[f] ?? faces["normal"]!])
+        return Sprites.overlay([legs[l] ?? legs["stand"]!, Sprites.lowered(upper, by: drops[l] ?? 0)])
     }
 
-    func walkFrame(face f: Face, step: Int, facingLeft: Bool) -> [String] {
+    func walkFrame(blink: Bool, step: Int, facingLeft: Bool) -> [String] {
         let side = facingLeft ? left : right
-        let upper = Sprites.overlay([side.body, side.arms[step], f == .blink ? side.blink : side.face])
+        let upper = Sprites.overlay([side.body, side.arms[step], blink ? side.blink : side.face])
         return Sprites.overlay([side.legs[step], step % 2 == 1 ? Sprites.raised(upper, by: 1) : upper])
+    }
+
+    func action(named name: String) -> MascotAction? {
+        actions.first { $0.name == name }
+    }
+
+    func randomAction(_ trigger: MascotAction.Trigger) -> MascotAction? {
+        let candidates = actions.filter { $0.trigger == trigger }
+        var r = Int.random(in: 0..<max(1, candidates.reduce(0) { $0 + $1.weight }))
+        for a in candidates {
+            if r < a.weight { return a }
+            r -= a.weight
+        }
+        return candidates.first
     }
 
     static func named(_ id: String?) -> MascotCharacter {
@@ -68,42 +143,11 @@ enum Sprites {
     }
 
     static func lowered(_ rows: [String], by n: Int) -> [String] {
-        Array(repeating: String(repeating: ".", count: rows[0].count), count: n) + rows.dropLast(n)
+        guard n > 0 else { return rows }
+        return Array(repeating: String(repeating: ".", count: rows[0].count), count: n) + rows.dropLast(n)
     }
 
     static func raised(_ rows: [String], by n: Int) -> [String] {
         Array(rows.dropFirst(n)) + Array(repeating: String(repeating: ".", count: rows[0].count), count: n)
     }
-
-    static let effectPalette: [Character: NSColor] = [
-        "K": NSColor(srgbRed: 0.20, green: 0.13, blue: 0.17, alpha: 1),
-        "R": NSColor(srgbRed: 0.92, green: 0.32, blue: 0.42, alpha: 1),
-        "W": NSColor(srgbRed: 1.00, green: 1.00, blue: 1.00, alpha: 1),
-        "D": NSColor(srgbRed: 0.24, green: 0.29, blue: 0.52, alpha: 1),
-    ]
-
-    static let note = [
-        "..KK.",
-        "..KKK",
-        "..K.K",
-        "KKK..",
-        "KKK..",
-    ]
-
-    static let zzz = [
-        "DDDDD",
-        "...D.",
-        "..D..",
-        ".D...",
-        "DDDDD",
-    ]
-
-    static let heart = [
-        ".KK.KK.",
-        "KRRKRRK",
-        "KRWRRRK",
-        ".KRRRK.",
-        "..KRK..",
-        "...K...",
-    ]
 }

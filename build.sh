@@ -3,6 +3,7 @@ set -e
 cd "$(dirname "$0")"
 APP=build/DesktopMascot.app
 mkdir -p $APP/Contents/MacOS
+python3 tools/gen_sprites.py
 swiftc -O -o $APP/Contents/MacOS/DesktopMascot Sources/DesktopMascot/**/*.swift
 cat > $APP/Contents/Info.plist <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
