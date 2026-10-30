@@ -135,6 +135,7 @@ final class Mascot: NSObject {
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
+    static let ledgeMargin: CGFloat = 12
 
     let window: NSPanel
     let view: MascotView
@@ -155,6 +156,8 @@ final class Mascot: NSObject {
     var petX: CGFloat?
     var petDirection: CGFloat = 0
     var petTurnTicks: [Int] = []
+    var desktopWindows: [DesktopWindow] = []
+    var sink: CGFloat = 0
 
     override init() {
         character = MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey))
@@ -337,6 +340,24 @@ final class Mascot: NSObject {
         return true
     }
 
+    func ground(below top: CGFloat) -> (y: CGFloat, span: ClosedRange<CGFloat>, window: DesktopWindow?) {
+        let area = self.area
+        let cx = x + window.frame.width / 2
+        var best = (y: area.minY, span: area.minX...area.maxX, window: DesktopWindow?.none)
+        for (i, w) in desktopWindows.enumerated() {
+            let f = w.frame
+            guard f.minX < cx, cx < f.maxX, f.maxY <= top + 0.5, f.maxY > best.y, f.maxY + window.frame.height <= area.maxY,
+                  !desktopWindows[..<i].contains(where: { $0.frame.contains(NSPoint(x: cx, y: f.maxY + 2)) }) else { continue }
+            best = (f.maxY, max(f.minX, area.minX)...min(f.maxX, area.maxX), w)
+        }
+        return best
+    }
+
+    func appBehind() -> String? {
+        let center = NSPoint(x: x + window.frame.width / 2, y: y + CGFloat(character.height) * MascotView.scale / 2)
+        return (desktopWindows.first { $0.frame.contains(center) } ?? ground(below: y).window)?.app
+    }
+
     func fall() {
         state = .falling(character.randomAction(.fall), velocity: 0, t: 0)
     }
@@ -350,6 +371,10 @@ final class Mascot: NSObject {
         var walkStep: Int?
         view.lift = 0
         view.effect = nil
+        sink = 0
+        if tick % 10 == 0 {
+            desktopWindows = Desktop.windows()
+        }
 
         func perform(_ a: MascotAction?, t: Int, length: Int) {
             guard let a, !a.frames.isEmpty else { return }
@@ -357,13 +382,24 @@ final class Mascot: NSObject {
             face = pose.face ?? face
             arms = pose.arms
             legs = pose.legs
-            view.lift = a.lift?.offset(t: t, length: length) ?? 0
+            let offset = a.lift?.offset(t: t, length: length) ?? 0
+            view.lift = max(0, offset)
+            sink = min(0, offset)
             if let e = a.effect, let glyph = character.glyphs[e.glyph], let (progress, dx) = e.state(t: t, length: length) {
                 view.effect = (glyph, progress, dx)
             }
         }
 
         snack?.step(floor: area.minY, gravity: Self.gravity)
+
+        switch state {
+        case .idle, .walking, .acting, .fetching:
+            if y > ground(below: y).y + 0.5 {
+                fall()
+            }
+        default:
+            break
+        }
 
         switch state {
         case .idle, .walking, .acting:
@@ -383,7 +419,7 @@ final class Mascot: NSObject {
             if snack?.landed == true {
                 state = .fetching
             } else if ticks <= 0 {
-                start(character.randomAction(.idle))
+                start(character.randomAction(.idle, app: appBehind()))
             } else {
                 state = .idle(ticks: ticks - 1)
             }
@@ -397,15 +433,23 @@ final class Mascot: NSObject {
             }
 
         case .walking(let ticks):
-            let area = self.area
-            let maxX = area.maxX - window.frame.width
+            let g = ground(below: y)
+            let w = window.frame.width
+            let range = g.window == nil
+                ? g.span.lowerBound...(g.span.upperBound - w)
+                : (g.span.lowerBound + Self.ledgeMargin - w / 2)...(g.span.upperBound - Self.ledgeMargin - w / 2)
             x += direction * Self.speed
-            if x <= area.minX || x >= maxX {
-                x = min(max(x, area.minX), maxX)
-                direction *= -1
-            }
             walkStep = (tick / 4) % 4
             state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .walking(ticks: ticks - 1)
+            if !range.contains(x) {
+                x = min(max(x, range.lowerBound), range.upperBound)
+                if Bool.random(), let a = character.randomAction(g.window == nil ? .wall : .ledge) {
+                    walkStep = nil
+                    start(a)
+                } else {
+                    direction *= -1
+                }
+            }
 
         case .acting(let a, let t, let length):
             perform(a, t: t, length: length)
@@ -425,6 +469,7 @@ final class Mascot: NSObject {
             perform(a, t: t, length: 1)
             let area = self.area
             let size = window.frame.size
+            let floor = ground(below: y).y
             x += vx
             y += vy
             vy -= Self.gravity
@@ -436,8 +481,8 @@ final class Mascot: NSObject {
                 y = area.maxY - size.height
                 vy = -abs(vy) * 0.5
             }
-            if y <= area.minY {
-                y = area.minY
+            if y <= floor {
+                y = floor
                 if -vy > Self.bounceSpeed {
                     vy = -vy * 0.45
                     vx *= 0.7
@@ -466,10 +511,10 @@ final class Mascot: NSObject {
 
         case .falling(let a, let v, let t):
             perform(a, t: t, length: 1)
-            let area = self.area
+            let floor = ground(below: y).y
             y -= v
-            if y <= area.minY {
-                y = area.minY
+            if y <= floor {
+                y = floor
                 state = .idle(ticks: Int.random(in: Self.restRange))
             } else {
                 state = .falling(a, velocity: v + Self.gravity, t: t + 1)
@@ -491,7 +536,7 @@ final class Mascot: NSObject {
         }
         x = min(max(x, area.minX), area.maxX - window.frame.width)
         y = min(max(y, area.minY), area.maxY - window.frame.height)
-        window.setFrameOrigin(NSPoint(x: x, y: y))
+        window.setFrameOrigin(NSPoint(x: x, y: y + sink))
     }
 }
 

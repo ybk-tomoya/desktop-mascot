@@ -5,8 +5,14 @@ YR = range(0)
 
 WALK_STEPS = 4
 REQUIRED = {"faces": ("normal", "blink"), "arms": ("down",), "legs": ("stand",)}
-TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "chained")
-LIFTS = ("jump", "hop", "rise")
+TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "ledge", "wall", "chained")
+LIFTS = ("jump", "hop", "rise", "sink")
+
+TERMINAL_APPS = ["com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "com.github.wez.wezterm", "org.alacritty",
+                 "net.kovidgoyal.kitty", "dev.warp.Warp-Stable", "com.cmuxterm.app", "com.microsoft.VSCode"]
+BROWSER_APPS = ["com.apple.Safari", "com.google.Chrome", "company.thebrowser.Browser", "company.thebrowser.dia", "org.mozilla.firefox",
+                "com.microsoft.edgemac", "com.brave.Browser", "com.openai.atlas"]
+MUSIC_APPS = ["com.apple.Music", "com.spotify.client"]
 
 GLYPH_PALETTE = {
     "K": (0.20, 0.13, 0.17),

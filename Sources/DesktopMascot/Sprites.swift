@@ -19,6 +19,7 @@ enum MascotLift {
     case jump(height: CGFloat)
     case hop(height: CGFloat, period: Int)
     case rise(height: CGFloat, from: Int, to: Int)
+    case sink(height: CGFloat)
 
     func offset(t: Int, length: Int) -> CGFloat {
         switch self {
@@ -29,6 +30,8 @@ enum MascotLift {
             return sin(CGFloat(t % period) / CGFloat(period) * .pi) * h
         case .rise(let h, let from, let to):
             return t > from && t < to ? h : 0
+        case .sink(let h):
+            return -h
         }
     }
 }
@@ -55,7 +58,7 @@ struct MascotSnack {
 
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, pet, `throw`, land, eat, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, chained
     }
 
     let name: String
@@ -64,6 +67,7 @@ struct MascotAction {
     let walk: Bool
     let duration: ClosedRange<Int>?
     let strength: ClosedRange<CGFloat>?
+    let apps: [String]?
     let frames: [MascotPose]
     let lift: MascotLift?
     let effect: MascotEffect?
@@ -120,9 +124,10 @@ struct MascotCharacter {
         actions.first { $0.name == name }
     }
 
-    func randomAction(_ trigger: MascotAction.Trigger, strength: CGFloat? = nil) -> MascotAction? {
+    func randomAction(_ trigger: MascotAction.Trigger, strength: CGFloat? = nil, app: String? = nil) -> MascotAction? {
         let candidates = actions.filter { a in
             a.trigger == trigger && (strength.map { s in a.strength?.contains(s) ?? true } ?? true)
+                && (a.apps.map { apps in app.map(apps.contains) ?? false } ?? true)
         }
         var r = Int.random(in: 0..<max(1, candidates.reduce(0) { $0 + $1.weight }))
         for a in candidates {

@@ -4,8 +4,8 @@ ID = "botan"
 NAME = "上伊那ぼたん"
 W, H, OY = 48, 72, 4
 ORDER = 1
-ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "cheers")
-LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
+ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "cheers", "behindHead", "typeLeft", "typeRight")
+LEGS = ("stand", "together", "sit", "kickLeft", "kickRight", "dangleLeft", "dangleRight")
 configure(W, H, OY)
 
 PALETTE = {
@@ -100,6 +100,9 @@ def front_arms(kind):
         "bothUp": (up_l, up_r),
         "peace": ((LS, (12, 34), (13.5, 25)), down_r),
         "heart": ((LS, (12.5, 38), (22, 33.5)), (RS, (35.5, 38), (26, 33.5))),
+        "behindHead": ((LS, (9.5, 23), (12.5, 12)), (RS, (38.5, 23), (35.5, 12))),
+        "typeLeft": ((LS, (14.5, 38), (20.5, 38.5)), (RS, (33.5, 38), (27.5, 41))),
+        "typeRight": ((LS, (14.5, 38), (20.5, 41)), (RS, (33.5, 38), (27.5, 38.5))),
         "cheers": (down_l, (RS, (38.5, 28), (38.5, 20))),
     }
     for s, e, hnd in poses[kind]:
@@ -140,6 +143,10 @@ def front_legs(kind):
         leg((20.5, 50), (15.5, 55.5), (13.5, 60)); leg((27.5, 50), (27.5, 57), (27.5, 64))
     elif kind == "kickRight":
         leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (32.5, 55.5), (34.5, 60))
+    elif kind == "dangleLeft":
+        leg((20.5, 50), (19.5, 54), (19, 59)); leg((27.5, 50), (27.5, 55), (27.5, 62))
+    elif kind == "dangleRight":
+        leg((20.5, 50), (20.5, 55), (20.5, 62)); leg((27.5, 50), (28.5, 54), (29, 59))
     elif kind == "sit":
         foot(L, (20.5, 64)); foot(L, (27.5, 64))
     return L.outline().rows()
@@ -149,6 +156,7 @@ EYE = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WEEFEEW", ".EeeWE
 CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KKKKK.", "......."]
 HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
+LOOK_DOWN = [".......", ".KKKKK.", "KWWWWWK", "WFFWFFW", "WEFFFEW", "WEEFEEW", ".EeeEE.", "..eee.."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
 SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
 DIZZY = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K..K.", ".K.KK..", "..K....", "......."]
@@ -192,6 +200,7 @@ def front_faces():
         "yawn": face_layer(CLOSED, CLOSED, "o"),
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
         "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
+        "lookDown": face_layer(LOOK_DOWN, LOOK_DOWN),
     }
 
 
@@ -357,6 +366,24 @@ ACTIONS = [
     {"name": "flail", "trigger": "drag",
      "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
                 {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
+    {"name": "ledgeSit", "trigger": "ledge", "weight": 2, "duration": (100, 200),
+     "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
+     "lift": {"type": "sink", "height": 36}},
+    {"name": "ledgePeek", "trigger": "ledge", "weight": 1, "duration": (40, 40),
+     "frames": [{"face": "lookDown"}],
+     "effect": {"glyph": "question", "dx": [14]}},
+    {"name": "lean", "trigger": "wall", "weight": 1, "duration": (80, 160),
+     "frames": [{"face": "happy", "arms": "behindHead", "legs": "together"}]},
+    {"name": "type", "trigger": "idle", "weight": 8, "apps": TERMINAL_APPS, "duration": (60, 140),
+     "frames": [{"face": "lookDown", "arms": "typeLeft", "legs": "sit", "ticks": 2},
+                {"face": "lookDown", "arms": "typeRight", "legs": "sit", "ticks": 2}]},
+    {"name": "browse", "trigger": "idle", "weight": 6, "apps": BROWSER_APPS, "duration": (80, 80),
+     "frames": [{"face": "lookLeft", "legs": "sit", "ticks": 20}, {"face": "lookRight", "legs": "sit", "ticks": 20}],
+     "next": {"surprised": 1 / 4}},
+    {"name": "groove", "trigger": "idle", "weight": 8, "apps": MUSIC_APPS, "duration": (80, 160),
+     "frames": [{"face": "happy", "arms": "bothUp", "legs": "together", "ticks": 5}, {"face": "happy", "legs": "together", "ticks": 5}],
+     "lift": {"type": "hop", "height": 6, "period": 10},
+     "effect": {"glyph": "note", "period": 20, "dx": [-16, 16]}},
     {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
 ]
 
