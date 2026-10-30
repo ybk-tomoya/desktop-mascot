@@ -2,7 +2,7 @@ import AppKit
 
 @MainActor
 final class MascotView: NSView {
-    static let scale: CGFloat = 4
+    static let scale: CGFloat = 2
     static let headroom: CGFloat = 48
 
     var sprite = Sprites.frame(face: .normal, legs: .stand)
@@ -270,7 +270,7 @@ final class Mascot: NSObject {
         case .stretching(let t):
             face = .yawn
             arms = .bothUp
-            view.lift = t > 10 && t < Self.stretchTicks - 10 ? MascotView.scale : 0
+            view.lift = t > 10 && t < Self.stretchTicks - 10 ? 4 : 0
             if t >= Self.stretchTicks {
                 state = Int.random(in: 0..<3) == 0 ? .sleeping(ticks: Int.random(in: 200...400)) : .idle(ticks: Int.random(in: Self.restRange))
             } else {
