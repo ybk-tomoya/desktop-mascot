@@ -189,8 +189,8 @@ def side_body(near_tail):
     tail = hs(poly([(13, 8), (18, 9), (16, 20), (15, 36), (14, 48), (11, 53), (10, 46), (11, 32), (10, 18)]))
     if not near_tail:
         L.paint(tail, "G", "fartail")
-    L.paint(hs(ellipse(SX, 15, 13, 13) + poly([(10, 15), (22, 15), (21, 30), (16, 37), (11, 33), (9.5, 24)])), "H", "hairback")
-    L.shade(hs(line((13, 22), (14, 34), 0.6)), "G", {"hairback"})
+    L.paint(hs(ellipse(SX, 15, 13, 13) + poly([(10, 15), (22, 15), (21.5, 27), (17.5, 30.5), (12.5, 29), (10, 22)])), "H", "hairback")
+    L.shade(hs(line((13.5, 21), (14.5, 28), 0.6)), "G", {"hairback"})
     L.paint(rect(21, 26, 25, 30), "S", "neck")
     L.shade(rect(21, 26, 25, 27), "s", {"neck"})
     L.paint(poly([(19, 29.5), (28, 29.5), (30, 32), (29, 41), (18, 41), (18, 32)]), "W", "shirt")
