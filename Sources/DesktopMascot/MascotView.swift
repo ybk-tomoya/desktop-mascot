@@ -74,13 +74,16 @@ final class MascotView: NSView {
         NSCursor.arrow.set()
     }
 
-    private func updateCursor(at p: NSPoint) {
+    func hitsSprite(at p: NSPoint) -> Bool {
         let s = Self.scale
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         let x = Int(p.x / s), y = Int((p.y - top) / s)
         let row = sprite.indices.contains(y) ? Array(sprite[y]) : []
-        let hit = row.indices.contains(x) && character.palette[row[x]] != nil
-        (hit ? NSCursor.pointingHand : NSCursor.arrow).set()
+        return row.indices.contains(x) && character.palette[row[x]] != nil
+    }
+
+    private func updateCursor(at p: NSPoint) {
+        (hitsSprite(at: p) ? NSCursor.pointingHand : NSCursor.arrow).set()
     }
 
     override func mouseDown(with event: NSEvent) {

@@ -55,6 +55,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     var desktopWindows: [DesktopWindow] = []
     var sink: CGFloat = 0
     var appearance = Appearance()
+    var overMascot = false
 
     override init() {
         character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))

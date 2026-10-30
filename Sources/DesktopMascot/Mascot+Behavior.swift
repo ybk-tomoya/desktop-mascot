@@ -101,6 +101,18 @@ extension Mascot {
         }
 
         render()
+        updateCursor()
+    }
+
+    func updateCursor() {
+        let p = view.convert(window.convertPoint(fromScreen: NSEvent.mouseLocation), from: nil)
+        let over = window.isVisible && view.hitsSprite(at: p)
+        if over {
+            NSCursor.pointingHand.set()
+        } else if overMascot {
+            NSCursor.arrow.set()
+        }
+        overMascot = over
     }
 
     var isBlinking: Bool {
