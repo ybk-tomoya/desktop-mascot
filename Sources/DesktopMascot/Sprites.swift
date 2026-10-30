@@ -24,7 +24,7 @@ enum Palette {
 }
 
 enum Face {
-    case normal, blink, happy, panic
+    case normal, blink, happy, panic, wink, yawn, lookLeft, lookRight
 }
 
 enum Legs {
@@ -32,7 +32,7 @@ enum Legs {
 }
 
 enum Arms {
-    case down, wave1, wave2, drumLeft, drumRight, flailLeft, flailRight
+    case down, drumLeft, drumRight, flailLeft, flailRight, bothUp, peace
 }
 
 enum Sprites {
@@ -77,6 +77,30 @@ enum Sprites {
             "...KHSSSKSSSKSSSHKHHK",
             "...KHSPKSSSSSKPSHKHHK",
         ]
+        case .wink: [
+            "...KHHSSSSSSSSSHHKHHK",
+            "...KHSSEWSSSSKSSHKHHK",
+            "...KHSSEESSSKSKSHKHHK",
+            "...KHSPeESSSSSPSHKHHK",
+        ]
+        case .yawn: [
+            "...KHHSSSSSSSSSHHKHHK",
+            "...KHSSSSSSSSSSSHKHHK",
+            "...KHSSSSSSSSSSSHKHHK",
+            "...KHSPKKSSSKKPSHKHHK",
+        ]
+        case .lookLeft: [
+            "...KHHSSSSSSSSSHHKHHK",
+            "...KHSEWSSSEWSSSHKHHK",
+            "...KHSEESSSEESSSHKHHK",
+            "...KHPeESSSeEPSSHKHHK",
+        ]
+        case .lookRight: [
+            "...KHHSSSSSSSSSHHKHHK",
+            "...KHSSSEWSSSEWSHKHHK",
+            "...KHSSSEESSSEESHKHHK",
+            "...KHSSPeESSSeEPHKHHK",
+        ]
         }
     }
 
@@ -89,30 +113,6 @@ enum Sprites {
             "......KwRWWWRwK...KHK",
             ".....KwwWWWWWwwK..KHK",
             ".....KSwWWWWWwSK...K.",
-            ".....KKDDDDDDDKK.....",
-            "....KDDDDDDDDDDDK....",
-            "....KdDdDdDdDdDdK....",
-            ".....KKKKKKKKKKK.....",
-        ]
-        case .wave1: [
-            ".KSKKHSSSSsSSSSHK.KHK",
-            ".KwKKHHKSSSSSKHHK.KHK",
-            "..KwKKHKRRKRRKHK..KHK",
-            "...KwKKwRWWWRwK...KHK",
-            "......KwWWWWWwwK..KHK",
-            "......KwWWWWWwSK...K.",
-            ".....KKDDDDDDDKK.....",
-            "....KDDDDDDDDDDDK....",
-            "....KdDdDdDdDdDdK....",
-            ".....KKKKKKKKKKK.....",
-        ]
-        case .wave2: [
-            "KSK.KHSSSSsSSSSHK.KHK",
-            ".KwKKHHKSSSSSKHHK.KHK",
-            "..KwKKHKRRKRRKHK..KHK",
-            "...KwKKwRWWWRwK...KHK",
-            "......KwWWWWWwwK..KHK",
-            "......KwWWWWWwSK...K.",
             ".....KKDDDDDDDKK.....",
             "....KDDDDDDDDDDDK....",
             "....KdDdDdDdDdDdK....",
@@ -161,6 +161,30 @@ enum Sprites {
             "......KwRWWWRwKwK.KHK",
             ".....KwwWWWWWwK...KHK",
             ".....KSwWWWWWwK....K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .bothUp: [
+            ".KSKKHSSSSsSSSSHK.KHK",
+            ".KwKKHHKSSSSSKHHK.KHK",
+            "..KwKKHKRRKRRKHKKSKHK",
+            "...KwKKwRWWWRwKwK.KHK",
+            "......KwWWWWWwK...KHK",
+            "......KwWWWWWwK....K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .peace: [
+            "KSKSKHSSSSsSSSSHK.KHK",
+            "KSSKKHHKSSSSSKHHK.KHK",
+            "..KwKKHKRRKRRKHK..KHK",
+            "...KwKKwRWWWRwK...KHK",
+            "......KwWWWWWwwK..KHK",
+            "......KwWWWWWwSK...K.",
             ".....KKDDDDDDDKK.....",
             "....KDDDDDDDDDDDK....",
             "....KdDdDdDdDdDdK....",

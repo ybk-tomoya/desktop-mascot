@@ -11,6 +11,7 @@ final class MascotView: NSView {
     var onClick: (() -> Void)?
     var onDrag: ((CGFloat, CGFloat) -> Void)?
     var onDrop: (() -> Void)?
+    var onHide: (() -> Void)?
     private var dragOrigin: NSPoint?
     private var dragged = false
 
@@ -61,13 +62,18 @@ final class MascotView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
+        menu.addItem(withTitle: "隠す", action: #selector(hide), keyEquivalent: "").target = self
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    @objc func hide() {
+        onHide?()
     }
 }
 
 @MainActor
-final class Mascot {
+final class Mascot: NSObject {
     enum State {
         case idle(ticks: Int)
         case walking(ticks: Int)
@@ -75,29 +81,34 @@ final class Mascot {
         case dragging
         case falling(velocity: CGFloat)
         case drumming(ticks: Int)
-        case waving(tick: Int)
         case sleeping(ticks: Int)
+        case peace(tick: Int)
+        case stretching(tick: Int)
+        case hopping(tick: Int)
     }
 
     static let fps = 20.0
     static let speed: CGFloat = 2
     static let happyTicks = 30
     static let gravity: CGFloat = 1.2
-    static let waveTicks = 40
-    static let waveDistance: CGFloat = 120
-    static let waveCooldown = 400
+    static let lookDistance: CGFloat = 300
+    static let restRange = 200...500
+    static let peaceTicks = 40
+    static let stretchTicks = 50
+    static let hopTicks = 45
 
     let window: NSPanel
     let view: MascotView
     var state = State.idle(ticks: 40)
     var direction: CGFloat = 1
     var tick = 0
-    var lastWave = -Mascot.waveCooldown
     var x: CGFloat
     var y: CGFloat
     var screen: NSScreen
+    let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+    let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
 
-    init() {
+    override init() {
         let size = NSSize(
             width: CGFloat(Sprites.width) * MascotView.scale,
             height: CGFloat(Sprites.frame(face: .normal, legs: .stand).count) * MascotView.scale + MascotView.headroom
@@ -107,6 +118,7 @@ final class Mascot {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
+        window.sharingType = .none
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
         window.contentView = view
@@ -115,7 +127,18 @@ final class Mascot {
         let area = screen.visibleFrame
         x = area.midX
         y = area.minY
-        view.onClick = { [weak self] in self?.state = .happy(tick: 0) }
+        super.init()
+
+        statusItem.button?.image = NSImage(systemSymbolName: "music.note", accessibilityDescription: "DesktopMascot")
+        let menu = NSMenu()
+        toggleItem.target = self
+        menu.addItem(toggleItem)
+        menu.addItem(.separator())
+        menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        statusItem.menu = menu
+
+        view.onHide = { [weak self] in self?.setVisible(false) }
+        view.onClick = { [weak self] in self?.state = Bool.random() ? .happy(tick: 0) : .peace(tick: 0) }
         view.onDrag = { [weak self] dx, dy in
             guard let self else { return }
             state = .dragging
@@ -141,6 +164,19 @@ final class Mascot {
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.screensChanged() }
         }
+    }
+
+    @objc func toggleVisible() {
+        setVisible(!window.isVisible)
+    }
+
+    func setVisible(_ visible: Bool) {
+        if visible {
+            window.orderFrontRegardless()
+        } else {
+            window.orderOut(nil)
+        }
+        toggleItem.title = visible ? "隠す" : "表示する"
     }
 
     func screensChanged() {
@@ -170,30 +206,31 @@ final class Mascot {
         view.lift = 0
         view.effect = nil
 
-        if cursorIsNear() {
-            switch state {
-            case .idle, .walking:
-                lastWave = tick
-                state = .waving(tick: 0)
-            default:
-                break
-            }
-        }
-
         switch state {
         case .idle(let ticks):
             if ticks <= 0 {
-                switch Int.random(in: 0..<10) {
+                switch Int.random(in: 0..<14) {
                 case 0..<6:
                     direction = Bool.random() ? 1 : -1
                     state = .walking(ticks: Int.random(in: 40...160))
                 case 6..<9:
                     state = .drumming(ticks: Int.random(in: 60...140))
+                case 9..<11:
+                    state = .stretching(tick: 0)
+                case 11..<13:
+                    state = .hopping(tick: 0)
                 default:
                     state = .sleeping(ticks: Int.random(in: 200...400))
                 }
             } else {
                 state = .idle(ticks: ticks - 1)
+            }
+            let m = NSEvent.mouseLocation
+            let dx = m.x - window.frame.midX
+            if face == .normal && hypot(dx, m.y - window.frame.midY) < Self.lookDistance {
+                if abs(dx) > 30 {
+                    face = dx < 0 ? .lookLeft : .lookRight
+                }
             }
 
         case .walking(let ticks):
@@ -205,14 +242,14 @@ final class Mascot {
                 direction *= -1
             }
             walkStep = (tick / 4) % 4
-            state = ticks <= 0 ? .idle(ticks: Int.random(in: 40...200)) : .walking(ticks: ticks - 1)
+            state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .walking(ticks: ticks - 1)
 
         case .happy(let t):
             face = .happy
             let p = CGFloat(t) / CGFloat(Self.happyTicks)
             view.lift = max(0, sin(min(p * 2, 1) * .pi) * 16)
             view.effect = (Sprites.heart, p, 0)
-            state = t >= Self.happyTicks ? .idle(ticks: 20) : .happy(tick: t + 1)
+            state = t >= Self.happyTicks ? .idle(ticks: Int.random(in: Self.restRange)) : .happy(tick: t + 1)
 
         case .drumming(let ticks):
             face = .happy
@@ -220,19 +257,39 @@ final class Mascot {
             arms = beat ? .drumLeft : .drumRight
             let t = tick % 24
             view.effect = (Sprites.note, CGFloat(t) / 24, (tick / 24) % 2 == 0 ? -20 : 20)
-            state = ticks <= 0 ? .idle(ticks: Int.random(in: 40...120)) : .drumming(ticks: ticks - 1)
+            state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .drumming(ticks: ticks - 1)
 
-        case .waving(let t):
+        case .peace(let t):
+            face = .wink
+            arms = .peace
+            if t < 20 {
+                view.effect = (Sprites.heart, CGFloat(t) / 20, -16)
+            }
+            state = t >= Self.peaceTicks ? .idle(ticks: Int.random(in: Self.restRange)) : .peace(tick: t + 1)
+
+        case .stretching(let t):
+            face = .yawn
+            arms = .bothUp
+            view.lift = t > 10 && t < Self.stretchTicks - 10 ? MascotView.scale : 0
+            if t >= Self.stretchTicks {
+                state = Int.random(in: 0..<3) == 0 ? .sleeping(ticks: Int.random(in: 200...400)) : .idle(ticks: Int.random(in: Self.restRange))
+            } else {
+                state = .stretching(tick: t + 1)
+            }
+
+        case .hopping(let t):
             face = .happy
-            arms = (t / 5) % 2 == 0 ? .wave1 : .wave2
-            state = t >= Self.waveTicks ? .idle(ticks: 30) : .waving(tick: t + 1)
+            legs = .together
+            let p = CGFloat(t % 15) / 15
+            view.lift = sin(p * .pi) * 12
+            state = t >= Self.hopTicks ? .idle(ticks: Int.random(in: Self.restRange)) : .hopping(tick: t + 1)
 
         case .sleeping(let ticks):
             face = .blink
             legs = .sit
             let t = tick % 40
             view.effect = (Sprites.zzz, CGFloat(t) / 40, 16)
-            state = ticks <= 0 ? .idle(ticks: 20) : .sleeping(ticks: ticks - 1)
+            state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .sleeping(ticks: ticks - 1)
 
         case .dragging:
             face = .panic
@@ -246,7 +303,7 @@ final class Mascot {
             y -= v
             if y <= area.minY {
                 y = area.minY
-                state = .idle(ticks: 20)
+                state = .idle(ticks: Int.random(in: Self.restRange))
             } else {
                 state = .falling(velocity: v + Self.gravity)
             }
@@ -255,13 +312,6 @@ final class Mascot {
         view.sprite = walkStep.map { Sprites.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? Sprites.frame(face: face, arms: arms, legs: legs)
         view.needsDisplay = true
         updatePosition()
-    }
-
-    func cursorIsNear() -> Bool {
-        guard tick - lastWave > Self.waveCooldown else { return false }
-        let m = NSEvent.mouseLocation
-        let f = window.frame
-        return hypot(m.x - f.midX, m.y - (f.minY + f.height / 2)) < Self.waveDistance
     }
 
     func updatePosition() {
