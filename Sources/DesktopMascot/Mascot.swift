@@ -1,7 +1,8 @@
 import AppKit
+import ServiceManagement
 
 @MainActor
-final class Mascot: NSObject {
+final class Mascot: NSObject, NSMenuDelegate {
     enum State {
         case idle(ticks: Int)
         case walking(ticks: Int)
@@ -24,6 +25,8 @@ final class Mascot: NSObject {
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
     static let ledgeMargin: CGFloat = 12
+    static let iconRows = 37
+    static let iconPixel: CGFloat = 0.5
 
     let window: NSPanel
     let view: MascotView
@@ -42,6 +45,7 @@ final class Mascot: NSObject {
     let accessoryItem = NSMenuItem(title: "小物", action: nil, keyEquivalent: "")
     let accessoryMenu = NSMenu()
     let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
+    let loginItem = NSMenuItem(title: "ログイン時に起動", action: #selector(toggleLogin), keyEquivalent: "")
     var snack: Snack?
     var dragDelta = CGVector.zero
     var dragVelocity = CGVector.zero
@@ -70,7 +74,7 @@ final class Mascot: NSObject {
         y = area.minY
         super.init()
 
-        statusItem.button?.image = NSImage(systemSymbolName: "music.note", accessibilityDescription: "DesktopMascot")
+        updateStatusIcon()
         let menu = NSMenu()
         toggleItem.target = self
         menu.addItem(toggleItem)
@@ -90,6 +94,9 @@ final class Mascot: NSObject {
         menu.autoenablesItems = false
         snackItem.isEnabled = character.snack != nil
         refreshWardrobe()
+        loginItem.target = self
+        menu.addItem(loginItem)
+        menu.delegate = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         statusItem.menu = menu
@@ -136,6 +143,26 @@ final class Mascot: NSObject {
         }
     }
 
+    func menuNeedsUpdate(_ menu: NSMenu) {
+        loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+    }
+
+    @objc func toggleLogin() {
+        let service = SMAppService.mainApp
+        do {
+            if service.status == .enabled {
+                try service.unregister()
+            } else {
+                try service.register()
+            }
+        } catch {
+            let alert = NSAlert()
+            alert.messageText = "ログイン時の起動を変更できませんでした"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+    }
+
     @objc func toggleVisible() {
         setVisible(!window.isVisible)
     }
@@ -167,6 +194,7 @@ final class Mascot: NSObject {
             item.state = item.representedObject as? String == c.id ? .on : .off
         }
         refreshWardrobe()
+        updateStatusIcon()
         updatePosition()
     }
 
@@ -178,6 +206,25 @@ final class Mascot: NSObject {
         }
         c.worn = Set(defaults.stringArray(forKey: wornKeyPrefix + c.id) ?? []).intersection(c.accessories.map(\.id))
         return c
+    }
+
+    func updateStatusIcon() {
+        let rows = Array(character.frame(face: "normal", arms: "down", legs: "stand").prefix(Self.iconRows))
+        let columns = rows.flatMap { row in row.enumerated().filter { character.palette[$0.element] != nil }.map(\.offset) }
+        guard let first = columns.min(), let last = columns.max() else { return }
+        let pixel = Self.iconPixel
+        let image = NSImage(size: NSSize(width: CGFloat(last - first + 1) * pixel, height: CGFloat(rows.count) * pixel))
+        image.lockFocus()
+        NSGraphicsContext.current?.shouldAntialias = false
+        for (y, row) in rows.enumerated() {
+            for (x, c) in row.enumerated() where x >= first && x <= last {
+                guard let color = character.palette[c] else { continue }
+                color.setFill()
+                NSRect(x: CGFloat(x - first) * pixel, y: CGFloat(rows.count - 1 - y) * pixel, width: pixel, height: pixel).fill()
+            }
+        }
+        image.unlockFocus()
+        statusItem.button?.image = image
     }
 
     func refreshWardrobe() {
@@ -205,6 +252,7 @@ final class Mascot: NSObject {
         view.character = character
         UserDefaults.standard.set(character.outfit.id, forKey: Self.outfitKeyPrefix + character.id)
         refreshWardrobe()
+        updateStatusIcon()
     }
 
     @objc func toggleAccessory(_ sender: NSMenuItem) {
@@ -217,6 +265,7 @@ final class Mascot: NSObject {
         view.character = character
         UserDefaults.standard.set(Array(character.worn), forKey: Self.wornKeyPrefix + character.id)
         refreshWardrobe()
+        updateStatusIcon()
     }
 
     func screensChanged() {
