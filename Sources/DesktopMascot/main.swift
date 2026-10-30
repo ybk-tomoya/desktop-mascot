@@ -6,7 +6,6 @@ final class MascotView: NSView {
     static let headroom: CGFloat = 48
 
     var sprite = Sprites.frame(face: .normal, legs: .stand)
-    var facingLeft = false
     var lift: CGFloat = 0
     var heartProgress: CGFloat?
     var onClick: (() -> Void)?
@@ -24,8 +23,7 @@ final class MascotView: NSView {
             for (x, c) in row.enumerated() {
                 guard let color = Palette.colors[c] else { continue }
                 color.setFill()
-                let col = facingLeft ? Sprites.width - 1 - x : x
-                NSRect(x: CGFloat(col) * s, y: top + CGFloat(y) * s, width: s, height: s).fill()
+                NSRect(x: CGFloat(x) * s, y: top + CGFloat(y) * s, width: s, height: s).fill()
             }
         }
 
@@ -79,7 +77,7 @@ final class Mascot {
     }
 
     static let fps = 20.0
-    static let speed: CGFloat = 1.5
+    static let speed: CGFloat = 2
     static let happyTicks = 30
     static let gravity: CGFloat = 1.2
 
@@ -160,6 +158,7 @@ final class Mascot {
         tick += 1
         var face = tick % 70 < 3 ? Face.blink : Face.normal
         var legs = Legs.stand
+        var walkStep: Int?
         view.lift = 0
         view.heartProgress = nil
 
@@ -180,7 +179,7 @@ final class Mascot {
                 x = min(max(x, area.minX), maxX)
                 direction *= -1
             }
-            legs = (tick / 4) % 2 == 0 ? .stride : .together
+            walkStep = (tick / 4) % 4
             state = ticks <= 0 ? .idle(ticks: Int.random(in: 40...200)) : .walking(ticks: ticks - 1)
 
         case .happy(let t):
@@ -206,8 +205,7 @@ final class Mascot {
             }
         }
 
-        view.facingLeft = direction < 0
-        view.sprite = Sprites.frame(face: face, legs: legs)
+        view.sprite = walkStep.map { Sprites.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? Sprites.frame(face: face, legs: legs)
         view.needsDisplay = true
         updatePosition()
     }
