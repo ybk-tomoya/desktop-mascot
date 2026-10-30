@@ -4,7 +4,7 @@ ID = "nijika"
 NAME = "伊地知虹夏"
 W, H, OY = 48, 72, 4
 ORDER = 0
-ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace")
+ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace", "heart")
 LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
 configure(W, H, OY)
 
@@ -91,6 +91,7 @@ def front_arms(kind):
         "flailRight": ((LS, (13, 37), (10, 42)), up_r),
         "bothUp": (up_l, up_r),
         "peace": ((LS, (12, 34), (13.5, 25)), down_r),
+        "heart": ((LS, (12.5, 38), (22, 33.5)), (RS, (35.5, 38), (26, 33.5))),
     }
     sticks = {
         "drumLeft": [((12, 24), (9, 16)), ((30, 40), (24, 44))],
@@ -138,6 +139,7 @@ CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KK
 HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
+SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
@@ -171,6 +173,7 @@ def front_faces():
         "happy": face_layer(HAPPY, HAPPY, "open"),
         "panic": face_layer(GT, mirror(GT), "o"),
         "wink": face_layer(EYE, HAPPY, "open"),
+        "surprised": face_layer(SURPRISED, SURPRISED, "o"),
         "yawn": face_layer(CLOSED, CLOSED, "o"),
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
         "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
@@ -310,6 +313,16 @@ ACTIONS = [
     {"name": "peace", "trigger": "click", "weight": 1, "duration": (40, 40),
      "frames": [{"face": "wink", "arms": "peace"}],
      "effect": {"glyph": "heart", "until": 20, "dx": [-16]}},
+    {"name": "lookAround", "trigger": "idle", "weight": 2, "duration": (56, 56),
+     "frames": [{"face": "lookLeft", "ticks": 10}, {"ticks": 4}, {"face": "lookRight", "ticks": 10}, {"ticks": 4}],
+     "effect": {"glyph": "question", "dx": [14]}},
+    {"name": "heart", "trigger": "idle", "weight": 1, "duration": (50, 50),
+     "frames": [{"face": "happy", "arms": "heart"}],
+     "effect": {"glyph": "heart", "period": 25, "dx": [0]}},
+    {"name": "surprised", "trigger": "click", "weight": 1, "duration": (24, 24),
+     "frames": [{"face": "surprised"}],
+     "lift": {"type": "jump", "height": 10},
+     "effect": {"glyph": "exclaim", "until": 18, "dx": [12]}},
     {"name": "flail", "trigger": "drag",
      "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
                 {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},

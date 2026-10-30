@@ -19,6 +19,8 @@ GLYPHS = {
     "heart": [".KK.KK.", "KRRKRRK", "KRWRRRK", ".KRRRK.", "..KRK..", "...K..."],
     "note": ["..KK.", "..KKK", "..K.K", "KKK..", "KKK.."],
     "zzz": ["DDDDD", "...D.", "..D..", ".D...", "DDDDD"],
+    "question": [".KKK.", "KK.KK", "...KK", "..KK.", "..K..", ".....", "..K.."],
+    "exclaim": ["KK", "KK", "KK", "KK", "..", "KK"],
 }
 
 
@@ -35,7 +37,7 @@ CLASS = {
     "skirt": "skirt", "sock": "sock", "shoe": "shoe", "stick": "stick",
     "farleg": "skin", "farsock": "sock", "farshoe": "shoe", "fartail": "tail",
     "ribbon": "ribbon", "bunch": "bunch", "pajama": "pajama", "shorts": "shorts", "frill": "frill",
-    "foot": "skin", "farfoot": "skin", "throat": "throat",
+    "foot": "skin", "farfoot": "skin", "throat": "throat", "cup": "cup",
 }
 
 

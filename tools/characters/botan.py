@@ -4,7 +4,7 @@ ID = "botan"
 NAME = "上伊那ぼたん"
 W, H, OY = 48, 72, 4
 ORDER = 1
-ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace")
+ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "cheers")
 LEGS = ("stand", "together", "sit", "kickLeft", "kickRight")
 configure(W, H, OY)
 
@@ -16,6 +16,7 @@ PALETTE = {
     "S": (1.00, 0.90, 0.83),
     "s": (0.93, 0.72, 0.66),
     "p": (1.00, 0.78, 0.80),
+    "P": (0.96, 0.58, 0.64),
     "W": (1.00, 1.00, 1.00),
     "E": (0.32, 0.45, 0.78),
     "F": (0.15, 0.20, 0.45),
@@ -93,6 +94,8 @@ def front_arms(kind):
         "flailRight": ((LS, (13, 37), (10, 42)), up_r),
         "bothUp": (up_l, up_r),
         "peace": ((LS, (12, 34), (13.5, 25)), down_r),
+        "heart": ((LS, (12.5, 38), (22, 33.5)), (RS, (35.5, 38), (26, 33.5))),
+        "cheers": (down_l, (RS, (38.5, 28), (38.5, 20))),
     }
     for s, e, hnd in poses[kind]:
         skin, sleeve, cuff, hand = arm_pts(s, e, hnd)
@@ -100,31 +103,38 @@ def front_arms(kind):
         L.paint(hand, "S", "hand")
         L.paint(sleeve, "Q", "sleeve")
         L.shade(cuff, "M", {"sleeve"})
+    if kind == "cheers":
+        L.paint(poly([(35.5, 12.5), (41.5, 12.5), (40.5, 18.5), (36.5, 18.5)]), "W", "cup")
     if kind == "peace":
         L.paint(line((13, 24), (12, 20), 0.7) + line((14.5, 24), (15.5, 20), 0.7), "S", "hand")
     return L.outline().rows()
 
 
-def foot(L, pos, group="foot"):
+def foot(L, pos, group="foot", rx=3):
     fx, fy = pos
-    L.paint(ellipse(fx, fy + 2, 3, 1.7), "S", group)
+    L.paint(ellipse(fx, fy + 2, rx, 1.7), "S", group)
     L.shade([(int(fx - 1), int(fy + 3)), (int(fx + 1), int(fy + 3))], "s", {group})
 
 
 def front_legs(kind):
     L = Layer()
+    close = kind == "together"
+
     def leg(hip, knee, ft):
         straight = abs((knee[0] - hip[0]) * (ft[1] - hip[1]) - (knee[1] - hip[1]) * (ft[0] - hip[0])) < 8
-        L.paint(taper(hip, ft, 2.7, 2.0) if straight else taper(hip, knee, 2.7, 2.3) + taper(knee, ft, 2.3, 2.0), "S", "leg")
-        foot(L, ft)
+        if straight:
+            L.paint(taper(hip, ft, 2.6 if close else 2.7, 2.0), "S", "leg")
+            foot(L, ft, rx=2.6 if close else 3)
+        else:
+            L.paint(taper(hip, knee, 2.7, 2.3) + taper(knee, ft, 2.3, 2.0) + ellipse(ft[0], ft[1], 2.3, 2.3), "S", "leg")
     if kind == "stand":
         leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (27.5, 57), (27.5, 64))
     elif kind == "together":
-        leg((21, 50), (21, 57), (21, 64)); leg((27, 50), (27, 57), (27, 64))
+        leg((20.7, 50), (20.7, 57), (20.7, 64)); leg((27.3, 50), (27.3, 57), (27.3, 64))
     elif kind == "kickLeft":
-        leg((20.5, 50), (16, 55), (15, 61)); leg((27.5, 50), (27.5, 57), (27.5, 64))
+        leg((20.5, 50), (15.5, 55.5), (13.5, 60)); leg((27.5, 50), (27.5, 57), (27.5, 64))
     elif kind == "kickRight":
-        leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (32, 55), (33, 61))
+        leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (32.5, 55.5), (34.5, 60))
     elif kind == "sit":
         foot(L, (20.5, 64)); foot(L, (27.5, 64))
     return L.outline().rows()
@@ -135,10 +145,11 @@ CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KK
 HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
+SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
-def face_layer(left, right, mouth="normal", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
+def face_layer(left, right, mouth="normal", blush_color="p", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
     g = [["."] * W for _ in range(H)]
     for pat, x0 in ((left, lx), (right, rx)):
         for dy, r in enumerate(pat):
@@ -148,7 +159,7 @@ def face_layer(left, right, mouth="normal", eye_y=16, lx=15, rx=26, blush=((14, 
     for bx, by in blush:
         for x, y in [(bx + i, by) for i in range(4)] + [(bx + i, by + 1) for i in range(1, 3)]:
             if g[y + OY][x] == ".":
-                g[y + OY][x] = "p"
+                g[y + OY][x] = blush_color
     my = 26 + OY
     if mouth == "normal":
         g[my][23] = g[my][24] = "m"
@@ -168,6 +179,8 @@ def front_faces():
         "happy": face_layer(HAPPY, HAPPY, "open"),
         "panic": face_layer(GT, mirror(GT), "o"),
         "wink": face_layer(EYE, HAPPY, "open"),
+        "surprised": face_layer(SURPRISED, SURPRISED, "o"),
+        "tipsy": face_layer(HAPPY, HAPPY, "open", blush_color="P"),
         "yawn": face_layer(CLOSED, CLOSED, "o"),
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
         "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
@@ -297,6 +310,20 @@ ACTIONS = [
     {"name": "peace", "trigger": "click", "weight": 1, "duration": (40, 40),
      "frames": [{"face": "wink", "arms": "peace"}],
      "effect": {"glyph": "heart", "until": 20, "dx": [-16]}},
+    {"name": "lookAround", "trigger": "idle", "weight": 2, "duration": (56, 56),
+     "frames": [{"face": "lookLeft", "ticks": 10}, {"ticks": 4}, {"face": "lookRight", "ticks": 10}, {"ticks": 4}],
+     "effect": {"glyph": "question", "dx": [14]}},
+    {"name": "heart", "trigger": "idle", "weight": 1, "duration": (50, 50),
+     "frames": [{"face": "happy", "arms": "heart"}],
+     "effect": {"glyph": "heart", "period": 25, "dx": [0]}},
+    {"name": "surprised", "trigger": "click", "weight": 1, "duration": (24, 24),
+     "frames": [{"face": "surprised"}],
+     "lift": {"type": "jump", "height": 10},
+     "effect": {"glyph": "exclaim", "until": 18, "dx": [12]}},
+    {"name": "cheers", "trigger": "idle", "weight": 2, "duration": (60, 60),
+     "frames": [{"face": "tipsy", "arms": "cheers"}],
+     "lift": {"type": "hop", "height": 4, "period": 20},
+     "effect": {"glyph": "heart", "period": 30, "dx": [14]}},
     {"name": "flail", "trigger": "drag",
      "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
                 {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
