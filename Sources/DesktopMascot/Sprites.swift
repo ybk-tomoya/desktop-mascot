@@ -48,9 +48,14 @@ struct MascotEffect {
     }
 }
 
+struct MascotSnack {
+    let name: String
+    let glyph: [String]
+}
+
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, chained
     }
 
     let name: String
@@ -93,6 +98,7 @@ struct MascotCharacter {
     let drops: [String: Int]
     let glyphs: [String: [String]]
     let actions: [MascotAction]
+    let snack: MascotSnack?
     let right: SideSprites
     let left: SideSprites
 

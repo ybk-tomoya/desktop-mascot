@@ -5,7 +5,7 @@ YR = range(0)
 
 WALK_STEPS = 4
 REQUIRED = {"faces": ("normal", "blink"), "arms": ("down",), "legs": ("stand",)}
-TRIGGERS = ("idle", "click", "drag", "fall", "chained")
+TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "chained")
 LIFTS = ("jump", "hop", "rise")
 
 GLYPH_PALETTE = {
@@ -21,6 +21,7 @@ GLYPHS = {
     "zzz": ["DDDDD", "...D.", "..D..", ".D...", "DDDDD"],
     "question": [".KKK.", "KK.KK", "...KK", "..KK.", "..K..", ".....", "..K.."],
     "exclaim": ["KK", "KK", "KK", "KK", "..", "KK"],
+    "dizzy": ["..D..", ".DWD.", "DWWWD", ".DWD.", "..D.."],
 }
 
 

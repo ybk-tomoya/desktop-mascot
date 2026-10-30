@@ -140,10 +140,11 @@ HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "....
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
 SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
+DIZZY = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K..K.", ".K.KK..", "..K....", "......."]
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
-def face_layer(left, right, mouth="normal", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
+def face_layer(left, right, mouth="normal", blush_color="p", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
     g = [["."] * W for _ in range(H)]
     for pat, x0 in ((left, lx), (right, rx)):
         for dy, r in enumerate(pat):
@@ -153,7 +154,7 @@ def face_layer(left, right, mouth="normal", eye_y=16, lx=15, rx=26, blush=((14, 
     for bx, by in blush:
         for x, y in [(bx + i, by) for i in range(4)] + [(bx + i, by + 1) for i in range(1, 3)]:
             if g[y + OY][x] == ".":
-                g[y + OY][x] = "p"
+                g[y + OY][x] = blush_color
     my = 26 + OY
     if mouth == "normal":
         g[my][23] = g[my][24] = "m"
@@ -174,6 +175,8 @@ def front_faces():
         "panic": face_layer(GT, mirror(GT), "o"),
         "wink": face_layer(EYE, HAPPY, "open"),
         "surprised": face_layer(SURPRISED, SURPRISED, "o"),
+        "shy": face_layer(HAPPY, HAPPY, "normal", blush_color="P"),
+        "dizzy": face_layer(DIZZY, mirror(DIZZY), "o"),
         "yawn": face_layer(CLOSED, CLOSED, "o"),
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
         "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
@@ -323,8 +326,35 @@ ACTIONS = [
      "frames": [{"face": "surprised"}],
      "lift": {"type": "jump", "height": 10},
      "effect": {"glyph": "exclaim", "until": 18, "dx": [12]}},
+    {"name": "pet", "trigger": "pet", "duration": (40, 40),
+     "frames": [{"face": "shy"}],
+     "effect": {"glyph": "heart", "period": 20, "dx": [-12, 12]}},
+    {"name": "thrown", "trigger": "throw",
+     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 2},
+                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 2}]},
+    {"name": "dizzy", "trigger": "land", "duration": (60, 60),
+     "frames": [{"face": "dizzy", "legs": "sit"}],
+     "effect": {"glyph": "dizzy", "period": 8, "dx": [-14, 0, 14, 0]}},
+    {"name": "eat", "trigger": "eat", "duration": (60, 60),
+     "frames": [{"face": "happy", "ticks": 5}, {"face": "shy", "ticks": 5}],
+     "effect": {"glyph": "heart", "period": 30, "dx": [12]}},
     {"name": "flail", "trigger": "drag",
      "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
                 {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
     {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
 ]
+
+GLYPH_PALETTE = {"O": (0.96, 0.62, 0.20), "o": (0.99, 0.80, 0.40)}
+
+SNACK = {
+    "name": "ドリトス",
+    "glyph": [
+        "...K...",
+        "..KoK..",
+        "..KOK..",
+        ".KOoOK.",
+        ".KOOOK.",
+        "KOoOOoK",
+        "KKKKKKK",
+    ],
+}

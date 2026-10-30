@@ -63,6 +63,11 @@ def check(mod, data):
                 fail(f"{where}: next action '{n}' does not exist")
     if not any(a["trigger"] == "idle" for a in mod.ACTIONS):
         fail("needs at least one idle action")
+    glyph_palette = {**engine.GLYPH_PALETTE, **getattr(mod, "GLYPH_PALETTE", {})}
+    for name, rows in [*glyphs.items(), *([("SNACK", mod.SNACK["glyph"])] if hasattr(mod, "SNACK") else [])]:
+        missing = {c for r in rows for c in r} - {"."} - set(glyph_palette)
+        if missing:
+            fail(f"glyph '{name}' uses colors missing from GLYPH_PALETTE: {sorted(missing)}")
 
 
 def s(v):
@@ -154,6 +159,9 @@ enum {t} {{
 '''
     out = out.rstrip() + "\n}\n"
     side = lambda x: f"SideSprites(body: {t}.{x}Body, face: {t}.{x}Face, blink: {t}.{x}Blink, legs: {t}.{x}Legs, arms: {t}.{x}Arms)"
+    snack = "nil"
+    if hasattr(mod, "SNACK"):
+        snack = f"MascotSnack(name: {s(mod.SNACK['name'])}, glyph: {s(mod.SNACK['glyph'])})"
     drops = "[" + ", ".join(f"{s(k)}: {v}" for k, v in data.get("drops", {}).items()) + "]" if data.get("drops") else "[:]"
     out += f'''
 extension MascotCharacter {{
@@ -170,6 +178,7 @@ extension MascotCharacter {{
         drops: {drops},
         glyphs: {t}.glyphs,
         actions: {t}.actions,
+        snack: {snack},
         right: {side("right")},
         left: {side("left")}
     )

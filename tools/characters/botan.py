@@ -151,6 +151,7 @@ HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "....
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
 SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
+DIZZY = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K..K.", ".K.KK..", "..K....", "......."]
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
@@ -185,6 +186,8 @@ def front_faces():
         "panic": face_layer(GT, mirror(GT), "o"),
         "wink": face_layer(EYE, HAPPY, "open"),
         "surprised": face_layer(SURPRISED, SURPRISED, "o"),
+        "shy": face_layer(HAPPY, HAPPY, "normal", blush_color="P"),
+        "dizzy": face_layer(DIZZY, mirror(DIZZY), "o"),
         "tipsy": face_layer(HAPPY, HAPPY, "open", blush_color="P"),
         "yawn": face_layer(CLOSED, CLOSED, "o"),
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
@@ -329,8 +332,37 @@ ACTIONS = [
      "frames": [{"face": "tipsy", "arms": "cheers"}],
      "lift": {"type": "hop", "height": 4, "period": 20},
      "effect": {"glyph": "heart", "period": 30, "dx": [14]}},
+    {"name": "pet", "trigger": "pet", "duration": (40, 40),
+     "frames": [{"face": "shy"}],
+     "effect": {"glyph": "heart", "period": 20, "dx": [-12, 12]}},
+    {"name": "thrown", "trigger": "throw",
+     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 2},
+                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 2}]},
+    {"name": "dizzy", "trigger": "land", "duration": (60, 60),
+     "frames": [{"face": "dizzy", "legs": "sit"}],
+     "effect": {"glyph": "dizzy", "period": 8, "dx": [-14, 0, 14, 0]}},
+    {"name": "eat", "trigger": "eat", "duration": (70, 70),
+     "frames": [{"face": "tipsy", "arms": "cheers"}],
+     "lift": {"type": "hop", "height": 4, "period": 20},
+     "effect": {"glyph": "heart", "period": 35, "dx": [14]}},
     {"name": "flail", "trigger": "drag",
      "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
                 {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
     {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
 ]
+
+GLYPH_PALETTE = {"w": (0.92, 0.92, 0.88), "b": (0.30, 0.42, 0.75)}
+
+SNACK = {
+    "name": "お酒",
+    "glyph": [
+        "..KK..",
+        "..KK..",
+        ".KWWK.",
+        "KWWWwK",
+        "KbbbbK",
+        "KWWWwK",
+        "KWWWwK",
+        ".KKKK.",
+    ],
+}

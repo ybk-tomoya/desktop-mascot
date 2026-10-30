@@ -95,6 +95,8 @@ final class Mascot: NSObject {
         case acting(MascotAction, t: Int, length: Int)
         case dragging(MascotAction?, t: Int)
         case falling(MascotAction?, velocity: CGFloat, t: Int)
+        case thrown(MascotAction?, vx: CGFloat, vy: CGFloat, t: Int, hard: Bool)
+        case fetching
     }
 
     static let fps = 20.0
@@ -103,6 +105,9 @@ final class Mascot: NSObject {
     static let lookDistance: CGFloat = 300
     static let restRange = 200...500
     static let characterKey = "character"
+    static let throwSpeed: CGFloat = 6
+    static let hardLanding: CGFloat = 8
+    static let petTurns = 3
 
     let window: NSPanel
     let view: MascotView
@@ -116,6 +121,13 @@ final class Mascot: NSObject {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
     let characterMenu = NSMenu()
+    let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
+    var snack: Snack?
+    var dragDelta = CGVector.zero
+    var dragVelocity = CGVector.zero
+    var petX: CGFloat?
+    var petDirection: CGFloat = 0
+    var petTurnTicks: [Int] = []
 
     override init() {
         character = MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey))
@@ -146,6 +158,10 @@ final class Mascot: NSObject {
             item.state = c.id == character.id ? .on : .off
         }
         menu.addItem(withTitle: "キャラ", action: nil, keyEquivalent: "").submenu = characterMenu
+        snackItem.target = self
+        menu.addItem(snackItem)
+        menu.autoenablesItems = false
+        snackItem.isEnabled = character.snack != nil
         menu.addItem(.separator())
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         statusItem.menu = menu
@@ -159,7 +175,10 @@ final class Mascot: NSObject {
             guard let self else { return }
             if case .dragging = state {} else {
                 state = .dragging(character.randomAction(.drag), t: 0)
+                dragVelocity = .zero
             }
+            dragDelta.dx += dx
+            dragDelta.dy += dy
             x += dx
             y += dy
             updatePosition()
@@ -170,7 +189,11 @@ final class Mascot: NSObject {
             if let s = NSScreen.screens.first(where: { $0.frame.contains(center) }) {
                 screen = s
             }
-            fall()
+            if hypot(dragVelocity.dx, dragVelocity.dy) > Self.throwSpeed {
+                state = .thrown(character.randomAction(.throw), vx: dragVelocity.dx, vy: dragVelocity.dy, t: 0, hard: false)
+            } else {
+                fall()
+            }
         }
         updatePosition()
         window.orderFrontRegardless()
@@ -209,6 +232,7 @@ final class Mascot: NSObject {
         window.setContentSize(size)
         view.frame = NSRect(origin: .zero, size: size)
         UserDefaults.standard.set(c.id, forKey: Self.characterKey)
+        snackItem.isEnabled = c.snack != nil
         for item in characterMenu.items {
             item.state = item.representedObject as? String == c.id ? .on : .off
         }
@@ -256,6 +280,35 @@ final class Mascot: NSObject {
         state = .idle(ticks: Int.random(in: Self.restRange))
     }
 
+    @objc func giveSnack() {
+        guard snack == nil, let s = character.snack else { return }
+        let area = self.area
+        snack = Snack(glyph: s.glyph, palette: character.glyphPalette, x: CGFloat.random(in: area.minX + 20...area.maxX - 60), top: area.maxY)
+    }
+
+    func isPetting() -> Bool {
+        let m = NSEvent.mouseLocation
+        let f = window.frame
+        let spriteHeight = CGFloat(character.height) * MascotView.scale
+        let head = NSRect(x: f.minX, y: f.minY + spriteHeight * 0.55, width: f.width, height: spriteHeight * 0.45 + 8)
+        guard head.contains(m), NSEvent.pressedMouseButtons == 0 else {
+            petX = nil
+            petDirection = 0
+            return false
+        }
+        defer { petX = m.x }
+        guard let last = petX, abs(m.x - last) > 1.5 else { return false }
+        let d: CGFloat = m.x > last ? 1 : -1
+        if petDirection != 0 && d != petDirection {
+            petTurnTicks.append(tick)
+        }
+        petDirection = d
+        petTurnTicks.removeAll { tick - $0 > 30 }
+        guard petTurnTicks.count >= Self.petTurns else { return false }
+        petTurnTicks.removeAll()
+        return true
+    }
+
     func fall() {
         state = .falling(character.randomAction(.fall), velocity: 0, t: 0)
     }
@@ -282,9 +335,26 @@ final class Mascot: NSObject {
             }
         }
 
+        snack?.step(floor: area.minY, gravity: Self.gravity)
+
+        switch state {
+        case .idle, .walking, .acting:
+            if isPetting() {
+                if case .acting(let a, _, let length) = state, a.trigger == .pet {
+                    state = .acting(a, t: 0, length: length)
+                } else if let a = character.randomAction(.pet) {
+                    start(a)
+                }
+            }
+        default:
+            break
+        }
+
         switch state {
         case .idle(let ticks):
-            if ticks <= 0 {
+            if snack?.landed == true {
+                state = .fetching
+            } else if ticks <= 0 {
                 start(character.randomAction(.idle))
             } else {
                 state = .idle(ticks: ticks - 1)
@@ -319,7 +389,57 @@ final class Mascot: NSObject {
 
         case .dragging(let a, let t):
             perform(a, t: t, length: 1)
+            dragVelocity = CGVector(dx: dragVelocity.dx * 0.5 + dragDelta.dx * 0.5, dy: dragVelocity.dy * 0.5 + dragDelta.dy * 0.5)
+            dragDelta = .zero
             state = .dragging(a, t: t + 1)
+
+        case .thrown(let a, var vx, var vy, let t, var hard):
+            perform(a, t: t, length: 1)
+            let area = self.area
+            let size = window.frame.size
+            x += vx
+            y += vy
+            vy -= Self.gravity
+            if x < area.minX || x > area.maxX - size.width {
+                x = min(max(x, area.minX), area.maxX - size.width)
+                vx = -vx * 0.7
+            }
+            if y > area.maxY - size.height {
+                y = area.maxY - size.height
+                vy = -abs(vy) * 0.5
+            }
+            if y <= area.minY {
+                y = area.minY
+                if -vy > Self.hardLanding {
+                    vy = -vy * 0.45
+                    vx *= 0.7
+                    hard = true
+                } else {
+                    if hard, let land = character.randomAction(.land) {
+                        start(land)
+                    } else {
+                        state = .idle(ticks: Int.random(in: Self.restRange))
+                    }
+                    break
+                }
+            }
+            state = .thrown(a, vx: vx, vy: vy, t: t + 1, hard: hard)
+
+        case .fetching:
+            guard let s = snack else {
+                state = .idle(ticks: Int.random(in: Self.restRange))
+                break
+            }
+            let target = s.midX - window.frame.width / 2
+            if abs(target - x) <= Self.speed * 2 {
+                s.remove()
+                snack = nil
+                start(character.randomAction(.eat))
+            } else {
+                direction = target < x ? -1 : 1
+                x += direction * Self.speed * 1.5
+                walkStep = (tick / 3) % 4
+            }
 
         case .falling(let a, let v, let t):
             perform(a, t: t, length: 1)
