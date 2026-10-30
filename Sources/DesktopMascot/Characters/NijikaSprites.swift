@@ -3664,7 +3664,7 @@ extension MascotCharacter {
         drops: ["sit": 14],
         glyphs: NijikaSprites.glyphs,
         actions: NijikaSprites.actions,
-        snack: MascotSnack(name: "ドリトス", glyph: ["...K...", "..KoK..", "..KOK..", ".KOoOK.", ".KOOOK.", "KOoOOoK", "KKKKKKK"]),
+        snack: MascotSnack(name: "ドリトス", glyph: ["....K....", "...KoK...", "...KOOK..", "..KOoOOK.", "..KOOOOOK", ".KOoOOKK.", ".KOOKK...", "KKK......"]),
         right: SideSprites(body: NijikaSprites.rightBody, face: NijikaSprites.rightFace, blink: NijikaSprites.rightBlink, legs: NijikaSprites.rightLegs, arms: NijikaSprites.rightArms),
         left: SideSprites(body: NijikaSprites.leftBody, face: NijikaSprites.leftFace, blink: NijikaSprites.leftBlink, legs: NijikaSprites.leftLegs, arms: NijikaSprites.leftArms)
     )

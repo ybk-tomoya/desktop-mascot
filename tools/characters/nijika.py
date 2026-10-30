@@ -358,12 +358,13 @@ GLYPH_PALETTE = {"O": (0.96, 0.62, 0.20), "o": (0.99, 0.80, 0.40)}
 SNACK = {
     "name": "ドリトス",
     "glyph": [
-        "...K...",
-        "..KoK..",
-        "..KOK..",
-        ".KOoOK.",
-        ".KOOOK.",
-        "KOoOOoK",
-        "KKKKKKK",
+        "....K....",
+        "...KoK...",
+        "...KOOK..",
+        "..KOoOOK.",
+        "..KOOOOOK",
+        ".KOoOOKK.",
+        ".KOOKK...",
+        "KKK......",
     ],
 }
