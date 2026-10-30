@@ -9,3 +9,4 @@ macOS のデスクトップマスコットアプリ（Swift / AppKit、Xcode プ
 - `Sources/DesktopMascot/Sprites.swift`: `MascotCharacter` / `MascotAction` などのデータ型とレイヤー合成
 - `references/` は公式資料のスキャンなので git に入れない（`.gitignore` 済み）
 - コミットはユーザーに頼まれたときだけ行う
+- 落下中・投げられて飛んでいる途中にクリックすると、空中に浮いたまま止まる。ユーザーが面白いので残すと決めた仕様なので直さない
