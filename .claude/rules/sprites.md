@@ -9,6 +9,8 @@ paths:
 
 - キャラは `tools/characters/<id>.py` 1ファイルで完結させる。追加はファイルを置いて `./build.sh` するだけでメニューに並ぶ。アプリのコードは触らない
 - 設定ファイルに書くもの: `ID`・`NAME`・`ORDER`（メニュー順）・`W`/`H`/`OY`・`PALETTE`、`build()`（ポーズの絵）、`ACTIONS`（アクション）、任意で `GLYPHS`/`GLYPH_PALETTE`（頭上の絵）・`SNACK`（おやつの `name` と `glyph`。色は `GLYPH_PALETTE` から。無いとメニューの「おやつをあげる」が無効になる）
+- `build(outfit)` は衣装 ID を受け取り、その衣装の絵を返す。`OUTFITS = [("id", "表示名"), ...]`（先頭が初期衣装。省略すると `[("default", "標準")]`）。衣装ごとに変わるのは服の絵（`body`・袖・靴下など）で、顔・髪・肌は共通。衣装で使う色は `PALETTE` に足す（小物の色の数字 `1`〜`7` とぶつからないように、文字は英字を使う）
+- `ACCESSORIES = ["cap", "glasses", "ribbon"]`（`sprite_engine.py` に絵がある小物から選ぶ）。使うキャラは `SX`/`HX`（横向きの頭の位置）を定義しておく。小物は頭に重ねる独立した絵で、メニューの「小物」から付け外しできる。新しい小物は `sprite_engine.py` の `front_accessories`/`side_accessories`/`ACCESSORY_NAMES` に足す
 - `build()` は `faces`/`arms`/`legs` を名前→レイヤーの辞書で返す。名前は自由だが `faces` に `normal`・`blink`、`arms` に `down`、`legs` に `stand` は必須。`lookLeft`/`lookRight` があれば視線に使われる。`drops` で座りなど上半身を下げるポーズを指定する
 - `ACTIONS` の各要素: `name`、`trigger`（`idle`=待機中ランダム / `click` / `drag` / `fall` / `pet`=なでなで / `throw`=投げられて飛んでいる間 / `land`=強く着地したとき / `eat`=おやつを食べるとき / `ledge`=乗っているウィンドウの端に着いたとき / `wall`=画面の左右の端に着いたとき / `chained`=`next` からのみ）、`weight`、`duration`（tick 範囲、20tick=1秒）、`frames`（`face`/`arms`/`legs`/`ticks`）、`lift`（`jump`/`hop`/`rise`/`sink`=キャラ全体を下げる。ふちに座るときに使う）、`effect`（`glyph`/`period`/`until`/`dx`）、`next`（{アクション名: 確率}）、`strength`（`throw`/`land` で投げた強さ=離した瞬間の px/tick の範囲）、`walk: True` で歩行、`apps`（裏のウィンドウのアプリの bundle ID のリスト。一致するときだけ候補になる。`sprite_engine.py` の `TERMINAL_APPS`/`BROWSER_APPS`/`MUSIC_APPS` を使える）
 - `Characters/*.swift` は生成物なので直接編集しない。形式チェックは `tools/gen_sprites.py` が行い、不正なら生成時にエラーで止まる

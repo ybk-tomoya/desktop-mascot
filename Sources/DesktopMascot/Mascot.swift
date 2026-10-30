@@ -18,6 +18,8 @@ final class Mascot: NSObject {
     static let lookDistance: CGFloat = 300
     static let restRange = 200...500
     static let characterKey = "character"
+    static let outfitKeyPrefix = "outfit."
+    static let wornKeyPrefix = "worn."
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
@@ -35,6 +37,10 @@ final class Mascot: NSObject {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
     let characterMenu = NSMenu()
+    let outfitItem = NSMenuItem(title: "衣装", action: nil, keyEquivalent: "")
+    let outfitMenu = NSMenu()
+    let accessoryItem = NSMenuItem(title: "小物", action: nil, keyEquivalent: "")
+    let accessoryMenu = NSMenu()
     let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
     var snack: Snack?
     var dragDelta = CGVector.zero
@@ -47,7 +53,7 @@ final class Mascot: NSObject {
     var appearance = Appearance()
 
     override init() {
-        character = MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey))
+        character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))
         view = MascotView(character: character)
         window = NSPanel(contentRect: view.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         window.isOpaque = false
@@ -75,10 +81,15 @@ final class Mascot: NSObject {
             item.state = c.id == character.id ? .on : .off
         }
         menu.addItem(withTitle: "キャラ", action: nil, keyEquivalent: "").submenu = characterMenu
+        outfitItem.submenu = outfitMenu
+        menu.addItem(outfitItem)
+        accessoryItem.submenu = accessoryMenu
+        menu.addItem(accessoryItem)
         snackItem.target = self
         menu.addItem(snackItem)
         menu.autoenablesItems = false
         snackItem.isEnabled = character.snack != nil
+        refreshWardrobe()
         menu.addItem(.separator())
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         statusItem.menu = menu
@@ -142,7 +153,8 @@ final class Mascot: NSObject {
         setCharacter(MascotCharacter.named(sender.representedObject as? String))
     }
 
-    func setCharacter(_ c: MascotCharacter) {
+    func setCharacter(_ next: MascotCharacter) {
+        let c = Self.dressed(next)
         character = c
         view.character = c
         state = .idle(ticks: Int.random(in: Self.restRange))
@@ -154,7 +166,57 @@ final class Mascot: NSObject {
         for item in characterMenu.items {
             item.state = item.representedObject as? String == c.id ? .on : .off
         }
+        refreshWardrobe()
         updatePosition()
+    }
+
+    static func dressed(_ c: MascotCharacter) -> MascotCharacter {
+        var c = c
+        let defaults = UserDefaults.standard
+        if let id = defaults.string(forKey: outfitKeyPrefix + c.id), let i = c.outfits.firstIndex(where: { $0.id == id }) {
+            c.outfitIndex = i
+        }
+        c.worn = Set(defaults.stringArray(forKey: wornKeyPrefix + c.id) ?? []).intersection(c.accessories.map(\.id))
+        return c
+    }
+
+    func refreshWardrobe() {
+        outfitMenu.removeAllItems()
+        for o in character.outfits {
+            let item = outfitMenu.addItem(withTitle: o.name, action: #selector(selectOutfit(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = o.id
+            item.state = o.id == character.outfit.id ? .on : .off
+        }
+        accessoryMenu.removeAllItems()
+        for a in character.accessories {
+            let item = accessoryMenu.addItem(withTitle: a.name, action: #selector(toggleAccessory(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = a.id
+            item.state = character.worn.contains(a.id) ? .on : .off
+        }
+        outfitItem.isEnabled = character.outfits.count > 1
+        accessoryItem.isEnabled = !character.accessories.isEmpty
+    }
+
+    @objc func selectOutfit(_ sender: NSMenuItem) {
+        guard let i = character.outfits.firstIndex(where: { $0.id == sender.representedObject as? String }) else { return }
+        character.outfitIndex = i
+        view.character = character
+        UserDefaults.standard.set(character.outfit.id, forKey: Self.outfitKeyPrefix + character.id)
+        refreshWardrobe()
+    }
+
+    @objc func toggleAccessory(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        if character.worn.contains(id) {
+            character.worn.remove(id)
+        } else {
+            character.worn.insert(id)
+        }
+        view.character = character
+        UserDefaults.standard.set(Array(character.worn), forKey: Self.wornKeyPrefix + character.id)
+        refreshWardrobe()
     }
 
     func screensChanged() {

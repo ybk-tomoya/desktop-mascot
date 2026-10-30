@@ -8,6 +8,24 @@ struct SideSprites {
     let arms: [[String]]
 }
 
+struct MascotOutfit {
+    let id: String
+    let name: String
+    let body: [String]
+    let arms: [String: [String]]
+    let legs: [String: [String]]
+    let right: SideSprites
+    let left: SideSprites
+}
+
+struct MascotAccessory {
+    let id: String
+    let name: String
+    let front: [String]
+    let right: [String]
+    let left: [String]
+}
+
 struct MascotPose {
     let face: String?
     let arms: String
@@ -96,27 +114,34 @@ struct MascotCharacter {
     let width: Int
     let palette: [Character: NSColor]
     let glyphPalette: [Character: NSColor]
-    let body: [String]
     let faces: [String: [String]]
-    let arms: [String: [String]]
-    let legs: [String: [String]]
     let drops: [String: Int]
     let glyphs: [String: [String]]
     let actions: [MascotAction]
     let snack: MascotSnack?
-    let right: SideSprites
-    let left: SideSprites
+    let outfits: [MascotOutfit]
+    let accessories: [MascotAccessory]
+    var outfitIndex = 0
+    var worn: Set<String> = []
 
+    var outfit: MascotOutfit { outfits[outfitIndex] }
+    var body: [String] { outfit.body }
+    var arms: [String: [String]] { outfit.arms }
+    var legs: [String: [String]] { outfit.legs }
     var height: Int { body.count }
 
+    private var wornAccessories: [MascotAccessory] {
+        accessories.filter { worn.contains($0.id) }
+    }
+
     func frame(face f: String, arms a: String, legs l: String) -> [String] {
-        let upper = Sprites.overlay([body, arms[a] ?? arms["down"]!, faces[f] ?? faces["normal"]!])
+        let upper = Sprites.overlay([body, arms[a] ?? arms["down"]!, faces[f] ?? faces["normal"]!] + wornAccessories.map(\.front))
         return Sprites.overlay([legs[l] ?? legs["stand"]!, Sprites.lowered(upper, by: drops[l] ?? 0)])
     }
 
     func walkFrame(blink: Bool, step: Int, facingLeft: Bool) -> [String] {
-        let side = facingLeft ? left : right
-        let upper = Sprites.overlay([side.body, side.arms[step], blink ? side.blink : side.face])
+        let side = facingLeft ? outfit.left : outfit.right
+        let upper = Sprites.overlay([side.body, side.arms[step], blink ? side.blink : side.face] + wornAccessories.map { facingLeft ? $0.left : $0.right })
         return Sprites.overlay([side.legs[step], step % 2 == 1 ? Sprites.raised(upper, by: 1) : upper])
     }
 

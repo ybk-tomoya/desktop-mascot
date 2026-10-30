@@ -21,6 +21,16 @@ GLYPH_PALETTE = {
     "D": (0.24, 0.29, 0.52),
 }
 
+ACCESSORY_PALETTE = {
+    "1": (0.85, 0.25, 0.30),
+    "2": (0.62, 0.14, 0.22),
+    "3": (0.97, 0.95, 0.95),
+    "4": (0.20, 0.13, 0.17),
+    "5": (0.85, 0.93, 1.00),
+    "6": (0.95, 0.50, 0.65),
+    "7": (0.78, 0.30, 0.50),
+}
+
 GLYPHS = {
     "heart": [".KK.KK.", "KRRKRRK", "KRWRRRK", ".KRRRK.", "..KRK..", "...K..."],
     "note": ["..KK.", "..KKK", "..K.K", "KKK..", "KKK.."],
@@ -45,6 +55,9 @@ CLASS = {
     "farleg": "skin", "farsock": "sock", "farshoe": "shoe", "fartail": "tail",
     "ribbon": "ribbon", "bunch": "bunch", "pajama": "pajama", "shorts": "shorts", "frill": "frill",
     "foot": "skin", "farfoot": "skin", "throat": "throat", "cup": "cup",
+    "capdome": "cap", "capband": "capband", "brim": "brim", "frame": "frame", "glint": "glint",
+    "loop": "loop", "knot": "knot", "tee": "shirt", "emblem": "shirt", "hoodie": "pajama", "hood": "hood", "pocket": "pocket",
+    "denim": "shorts",
 }
 
 
@@ -151,3 +164,45 @@ def where(pts, cond):
 
 def mirror(rows):
     return [r[::-1] for r in rows]
+
+
+def front_accessories():
+    cap = Layer()
+    cap.paint(where(ellipse(24, 12, 14, 10), lambda x, y: y <= 10), "1", "capdome")
+    cap.paint(rect(12, 9, 35, 10), "3", "capband")
+    cap.paint(poly([(13, 10), (35, 10), (36, 12.5), (12, 12.5)]), "2", "brim")
+    glasses = Layer()
+    for cx in (18, 29):
+        ring = [p for p in ellipse(cx, 20, 5, 4.6) if p not in ellipse(cx, 20, 3.6, 3.2)]
+        glasses.paint(ring, "4", "frame")
+    glasses.paint(rect(23, 19, 24, 19), "4", "frame")
+    glasses.paint([(16, 17), (17, 17), (27, 17), (28, 17)], "5", "glint")
+    ribbon = Layer()
+    ribbon.paint(poly([(15, 6), (9, 2), (9, 10)]) + poly([(15, 6), (21, 2), (21, 10)]), "6", "loop")
+    ribbon.paint(rect(14, 5, 16, 7), "7", "knot")
+    return {"cap": cap, "glasses": glasses, "ribbon": ribbon}
+
+
+def side_accessories(sx):
+    cap = Layer()
+    cap.paint(where(ellipse(sx, 12, 13.5, 10), lambda x, y: y <= 10), "1", "capdome")
+    cap.paint(rect(sx - 12, 9, sx + 13, 10), "3", "capband")
+    cap.paint(poly([(sx + 5, 10), (sx + 18, 10), (sx + 19, 13), (sx + 4, 13)]), "2", "brim")
+    glasses = Layer()
+    ring = [p for p in ellipse(sx + 7, 20, 5, 4.6) if p not in ellipse(sx + 7, 20, 3.6, 3.2)]
+    glasses.paint(ring, "4", "frame")
+    glasses.paint(rect(sx - 4, 19, sx + 2, 19), "4", "frame")
+    glasses.paint([(sx + 5, 17), (sx + 6, 17)], "5", "glint")
+    ribbon = Layer()
+    ribbon.paint(poly([(sx - 6, 6), (sx - 12, 2), (sx - 12, 10)]) + poly([(sx - 6, 6), (sx, 2), (sx, 10)]), "6", "loop")
+    ribbon.paint(rect(sx - 7, 5, sx - 5, 7), "7", "knot")
+    return {"cap": cap, "glasses": glasses, "ribbon": ribbon}
+
+
+ACCESSORY_NAMES = {"cap": "キャップ", "glasses": "メガネ", "ribbon": "リボン"}
+
+
+def accessory(id, side_x):
+    front = front_accessories()[id].outline().rows()
+    right = side_accessories(side_x)[id].outline().rows()
+    return {"front": front, "right": right, "left": mirror(right)}
