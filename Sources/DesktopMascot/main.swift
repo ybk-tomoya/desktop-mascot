@@ -5,7 +5,8 @@ final class MascotView: NSView {
     static let scale: CGFloat = 2
     static let headroom: CGFloat = 48
 
-    var sprite = Sprites.frame(face: .normal, legs: .stand)
+    var character: MascotCharacter
+    var sprite: [String]
     var lift: CGFloat = 0
     var effect: (glyph: [String], progress: CGFloat, dx: CGFloat)?
     var onClick: (() -> Void)?
@@ -15,6 +16,20 @@ final class MascotView: NSView {
     private var dragOrigin: NSPoint?
     private var dragged = false
 
+    init(character: MascotCharacter) {
+        self.character = character
+        sprite = character.frame(face: .normal, legs: .stand)
+        super.init(frame: NSRect(origin: .zero, size: Self.size(for: character)))
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
+
+    static func size(for character: MascotCharacter) -> NSSize {
+        NSSize(width: CGFloat(character.width) * scale, height: CGFloat(character.height) * scale + headroom)
+    }
+
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
@@ -22,7 +37,7 @@ final class MascotView: NSView {
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         for (y, row) in sprite.enumerated() {
             for (x, c) in row.enumerated() {
-                guard let color = Palette.colors[c] else { continue }
+                guard let color = character.palette[c] else { continue }
                 color.setFill()
                 NSRect(x: CGFloat(x) * s, y: top + CGFloat(y) * s, width: s, height: s).fill()
             }
@@ -34,7 +49,7 @@ final class MascotView: NSView {
         let originY = top - 6 - (p * 30 / hs).rounded() * hs - CGFloat(glyph.count) * hs
         for (y, row) in glyph.enumerated() {
             for (x, c) in row.enumerated() {
-                guard let color = Palette.colors[c] else { continue }
+                guard let color = Sprites.effectPalette[c] else { continue }
                 color.withAlphaComponent(1 - p).setFill()
                 NSRect(x: originX + CGFloat(x) * hs, y: originY + CGFloat(y) * hs, width: hs, height: hs).fill()
             }
@@ -96,9 +111,11 @@ final class Mascot: NSObject {
     static let peaceTicks = 40
     static let stretchTicks = 50
     static let hopTicks = 45
+    static let characterKey = "character"
 
     let window: NSPanel
     let view: MascotView
+    var character: MascotCharacter
     var state = State.idle(ticks: 40)
     var direction: CGFloat = 1
     var tick = 0
@@ -107,13 +124,11 @@ final class Mascot: NSObject {
     var screen: NSScreen
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
+    let characterMenu = NSMenu()
 
     override init() {
-        let size = NSSize(
-            width: CGFloat(Sprites.width) * MascotView.scale,
-            height: CGFloat(Sprites.frame(face: .normal, legs: .stand).count) * MascotView.scale + MascotView.headroom
-        )
-        view = MascotView(frame: NSRect(origin: .zero, size: size))
+        character = MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey))
+        view = MascotView(character: character)
         window = NSPanel(contentRect: view.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         window.isOpaque = false
         window.backgroundColor = .clear
@@ -133,6 +148,13 @@ final class Mascot: NSObject {
         let menu = NSMenu()
         toggleItem.target = self
         menu.addItem(toggleItem)
+        for c in MascotCharacter.all {
+            let item = characterMenu.addItem(withTitle: c.name, action: #selector(selectCharacter(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = c.id
+            item.state = c.id == character.id ? .on : .off
+        }
+        menu.addItem(withTitle: "キャラ", action: nil, keyEquivalent: "").submenu = characterMenu
         menu.addItem(.separator())
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         statusItem.menu = menu
@@ -177,6 +199,23 @@ final class Mascot: NSObject {
             window.orderOut(nil)
         }
         toggleItem.title = visible ? "隠す" : "表示する"
+    }
+
+    @objc func selectCharacter(_ sender: NSMenuItem) {
+        setCharacter(MascotCharacter.named(sender.representedObject as? String))
+    }
+
+    func setCharacter(_ c: MascotCharacter) {
+        character = c
+        view.character = c
+        let size = MascotView.size(for: c)
+        window.setContentSize(size)
+        view.frame = NSRect(origin: .zero, size: size)
+        UserDefaults.standard.set(c.id, forKey: Self.characterKey)
+        for item in characterMenu.items {
+            item.state = item.representedObject as? String == c.id ? .on : .off
+        }
+        updatePosition()
     }
 
     func screensChanged() {
@@ -309,7 +348,7 @@ final class Mascot: NSObject {
             }
         }
 
-        view.sprite = walkStep.map { Sprites.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? Sprites.frame(face: face, arms: arms, legs: legs)
+        view.sprite = walkStep.map { character.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? character.frame(face: face, arms: arms, legs: legs)
         view.needsDisplay = true
         updatePosition()
     }
