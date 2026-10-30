@@ -4,6 +4,8 @@ ID = "nijika"
 NAME = "伊地知虹夏"
 W, H, OY = 48, 72, 4
 SIT_DROP = 14
+ORDER = 0
+DRUMS = True
 configure(W, H, OY)
 
 PALETTE = {
@@ -134,16 +136,18 @@ def front_legs(kind):
 EYE = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WEEFEEW", ".EeeWE.", "..eee.."]
 CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KKKKK.", "......."]
 HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
+LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
+LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
-def face_layer(left, right, mouth="normal", look=0, eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
+def face_layer(left, right, mouth="normal", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
     g = [["."] * W for _ in range(H)]
     for pat, x0 in ((left, lx), (right, rx)):
         for dy, r in enumerate(pat):
             for dx, ch in enumerate(r):
                 if ch != ".":
-                    g[eye_y + dy + OY][x0 + dx + (look if pat is EYE else 0)] = ch
+                    g[eye_y + dy + OY][x0 + dx] = ch
     for bx, by in blush:
         for x, y in [(bx + i, by) for i in range(4)] + [(bx + i, by + 1) for i in range(1, 3)]:
             if g[y + OY][x] == ".":
@@ -168,8 +172,8 @@ def front_faces():
         "panic": face_layer(GT, mirror(GT), "o"),
         "wink": face_layer(EYE, HAPPY, "open"),
         "yawn": face_layer(CLOSED, CLOSED, "o"),
-        "lookLeft": face_layer(EYE, EYE, look=-1),
-        "lookRight": face_layer(EYE, EYE, look=1),
+        "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
+        "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
     }
 
 

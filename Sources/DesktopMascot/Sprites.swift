@@ -26,6 +26,7 @@ struct MascotCharacter {
     let name: String
     let width: Int
     let sitDrop: Int
+    let canDrum: Bool
     let palette: [Character: NSColor]
     let body: [String]
     let face: (Face) -> [String]

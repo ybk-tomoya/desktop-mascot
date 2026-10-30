@@ -21,6 +21,8 @@ CLASS = {
     "shirt": "shirt", "sleeve": "shirt", "bow": "bow", "tie": "bow",
     "skirt": "skirt", "sock": "sock", "shoe": "shoe", "stick": "stick",
     "farleg": "skin", "farsock": "sock", "farshoe": "shoe", "fartail": "tail",
+    "ribbon": "ribbon", "bunch": "bunch", "pajama": "pajama", "shorts": "shorts", "frill": "frill",
+    "foot": "skin", "farfoot": "skin", "throat": "throat",
 }
 
 

@@ -208,6 +208,7 @@ final class Mascot: NSObject {
     func setCharacter(_ c: MascotCharacter) {
         character = c
         view.character = c
+        state = .idle(ticks: Int.random(in: Self.restRange))
         let size = MascotView.size(for: c)
         window.setContentSize(size)
         view.frame = NSRect(origin: .zero, size: size)
@@ -253,7 +254,7 @@ final class Mascot: NSObject {
                     direction = Bool.random() ? 1 : -1
                     state = .walking(ticks: Int.random(in: 40...160))
                 case 6..<9:
-                    state = .drumming(ticks: Int.random(in: 60...140))
+                    state = character.canDrum ? .drumming(ticks: Int.random(in: 60...140)) : .hopping(tick: 0)
                 case 9..<11:
                     state = .stretching(tick: 0)
                 case 11..<13:
