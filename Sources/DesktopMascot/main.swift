@@ -7,7 +7,7 @@ final class MascotView: NSView {
 
     var sprite = Sprites.frame(face: .normal, legs: .stand)
     var lift: CGFloat = 0
-    var heartProgress: CGFloat?
+    var effect: (glyph: [String], progress: CGFloat, dx: CGFloat)?
     var onClick: (() -> Void)?
     var onDrag: ((CGFloat, CGFloat) -> Void)?
     var onDrop: (() -> Void)?
@@ -18,7 +18,7 @@ final class MascotView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         let s = Self.scale
-        let top = bounds.height - CGFloat(sprite.count) * s - lift
+        let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         for (y, row) in sprite.enumerated() {
             for (x, c) in row.enumerated() {
                 guard let color = Palette.colors[c] else { continue }
@@ -27,11 +27,11 @@ final class MascotView: NSView {
             }
         }
 
-        guard let p = heartProgress else { return }
+        guard let (glyph, p, dx) = effect else { return }
         let hs: CGFloat = 3
-        let originX = bounds.midX - CGFloat(Sprites.heart[0].count) * hs / 2
-        let originY = top - 6 - p * 30 - CGFloat(Sprites.heart.count) * hs
-        for (y, row) in Sprites.heart.enumerated() {
+        let originX = (bounds.midX + dx - CGFloat(glyph[0].count) * hs / 2).rounded()
+        let originY = top - 6 - (p * 30 / hs).rounded() * hs - CGFloat(glyph.count) * hs
+        for (y, row) in glyph.enumerated() {
             for (x, c) in row.enumerated() {
                 guard let color = Palette.colors[c] else { continue }
                 color.withAlphaComponent(1 - p).setFill()
@@ -74,18 +74,25 @@ final class Mascot {
         case happy(tick: Int)
         case dragging
         case falling(velocity: CGFloat)
+        case drumming(ticks: Int)
+        case waving(tick: Int)
+        case sleeping(ticks: Int)
     }
 
     static let fps = 20.0
     static let speed: CGFloat = 2
     static let happyTicks = 30
     static let gravity: CGFloat = 1.2
+    static let waveTicks = 40
+    static let waveDistance: CGFloat = 120
+    static let waveCooldown = 400
 
     let window: NSPanel
     let view: MascotView
     var state = State.idle(ticks: 40)
     var direction: CGFloat = 1
     var tick = 0
+    var lastWave = -Mascot.waveCooldown
     var x: CGFloat
     var y: CGFloat
     var screen: NSScreen
@@ -158,15 +165,33 @@ final class Mascot {
         tick += 1
         var face = tick % 70 < 3 ? Face.blink : Face.normal
         var legs = Legs.stand
+        var arms = Arms.down
         var walkStep: Int?
         view.lift = 0
-        view.heartProgress = nil
+        view.effect = nil
+
+        if cursorIsNear() {
+            switch state {
+            case .idle, .walking:
+                lastWave = tick
+                state = .waving(tick: 0)
+            default:
+                break
+            }
+        }
 
         switch state {
         case .idle(let ticks):
             if ticks <= 0 {
-                direction = Bool.random() ? 1 : -1
-                state = .walking(ticks: Int.random(in: 40...160))
+                switch Int.random(in: 0..<10) {
+                case 0..<6:
+                    direction = Bool.random() ? 1 : -1
+                    state = .walking(ticks: Int.random(in: 40...160))
+                case 6..<9:
+                    state = .drumming(ticks: Int.random(in: 60...140))
+                default:
+                    state = .sleeping(ticks: Int.random(in: 200...400))
+                }
             } else {
                 state = .idle(ticks: ticks - 1)
             }
@@ -186,12 +211,34 @@ final class Mascot {
             face = .happy
             let p = CGFloat(t) / CGFloat(Self.happyTicks)
             view.lift = max(0, sin(min(p * 2, 1) * .pi) * 16)
-            view.heartProgress = p
+            view.effect = (Sprites.heart, p, 0)
             state = t >= Self.happyTicks ? .idle(ticks: 20) : .happy(tick: t + 1)
 
-        case .dragging:
+        case .drumming(let ticks):
+            face = .happy
+            let beat = (tick / 3) % 2 == 0
+            arms = beat ? .drumLeft : .drumRight
+            let t = tick % 24
+            view.effect = (Sprites.note, CGFloat(t) / 24, (tick / 24) % 2 == 0 ? -20 : 20)
+            state = ticks <= 0 ? .idle(ticks: Int.random(in: 40...120)) : .drumming(ticks: ticks - 1)
+
+        case .waving(let t):
+            face = .happy
+            arms = (t / 5) % 2 == 0 ? .wave1 : .wave2
+            state = t >= Self.waveTicks ? .idle(ticks: 30) : .waving(tick: t + 1)
+
+        case .sleeping(let ticks):
             face = .blink
-            legs = .together
+            legs = .sit
+            let t = tick % 40
+            view.effect = (Sprites.zzz, CGFloat(t) / 40, 16)
+            state = ticks <= 0 ? .idle(ticks: 20) : .sleeping(ticks: ticks - 1)
+
+        case .dragging:
+            face = .panic
+            let flip = (tick / 3) % 2 == 0
+            arms = flip ? .flailLeft : .flailRight
+            legs = flip ? .kickRight : .kickLeft
 
         case .falling(let v):
             legs = .together
@@ -205,9 +252,16 @@ final class Mascot {
             }
         }
 
-        view.sprite = walkStep.map { Sprites.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? Sprites.frame(face: face, legs: legs)
+        view.sprite = walkStep.map { Sprites.walkFrame(face: face, step: $0, facingLeft: direction < 0) } ?? Sprites.frame(face: face, arms: arms, legs: legs)
         view.needsDisplay = true
         updatePosition()
+    }
+
+    func cursorIsNear() -> Bool {
+        guard tick - lastWave > Self.waveCooldown else { return false }
+        let m = NSEvent.mouseLocation
+        let f = window.frame
+        return hypot(m.x - f.midX, m.y - (f.minY + f.height / 2)) < Self.waveDistance
     }
 
     func updatePosition() {

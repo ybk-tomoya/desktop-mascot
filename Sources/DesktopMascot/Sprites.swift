@@ -18,24 +18,31 @@ enum Palette {
         "d": NSColor(srgbRed: 0.16, green: 0.20, blue: 0.40, alpha: 1),
         "w": NSColor(srgbRed: 0.84, green: 0.85, blue: 0.92, alpha: 1),
         "L": NSColor(srgbRed: 0.97, green: 0.97, blue: 0.99, alpha: 1),
+        "T": NSColor(srgbRed: 0.66, green: 0.44, blue: 0.24, alpha: 1),
         "B": NSColor(srgbRed: 0.42, green: 0.23, blue: 0.21, alpha: 1),
     ]
 }
 
 enum Face {
-    case normal, blink, happy
+    case normal, blink, happy, panic
 }
 
 enum Legs {
-    case stand, together
+    case stand, together, sit, kickLeft, kickRight
+}
+
+enum Arms {
+    case down, wave1, wave2, drumLeft, drumRight, flailLeft, flailRight
 }
 
 enum Sprites {
     static let width = 21
 
     static let head = [
-        "...........K.........",
+        "..........K..........",
+        "..........KK.........",
         "..........KhK........",
+        "..........KhHK.......",
         ".......KKKKKKK.......",
         ".....KKHhhHHHHKK.....",
         "....KHhhHHHHHHHHKKK..",
@@ -64,21 +71,103 @@ enum Sprites {
             "...KHSKSKSSSKSKSHKHHK",
             "...KHSPSSSSSSSPSHKHHK",
         ]
+        case .panic: [
+            "...KHHSSSSSSSSSHHKHHK",
+            "...KHSSKSSSSSKSSHKHHK",
+            "...KHSSSKSSSKSSSHKHHK",
+            "...KHSPKSSSSSKPSHKHHK",
+        ]
         }
     }
 
-    static let body = [
-        "....KHSSSSsSSSSHK.KHK",
-        "....KHHKSSSSSKHHK.KHK",
-        ".....KHKRRKRRKHK..KHK",
-        "......KwRWWWRwK...KHK",
-        ".....KwwWWWWWwwK..KHK",
-        ".....KSwWWWWWwSK...K.",
-        ".....KKDDDDDDDKK.....",
-        "....KDDDDDDDDDDDK....",
-        "....KdDdDdDdDdDdK....",
-        ".....KKKKKKKKKKK.....",
-    ]
+    static func body(_ arms: Arms) -> [String] {
+        switch arms {
+        case .down: [
+            "....KHSSSSsSSSSHK.KHK",
+            "....KHHKSSSSSKHHK.KHK",
+            ".....KHKRRKRRKHK..KHK",
+            "......KwRWWWRwK...KHK",
+            ".....KwwWWWWWwwK..KHK",
+            ".....KSwWWWWWwSK...K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .wave1: [
+            ".KSKKHSSSSsSSSSHK.KHK",
+            ".KwKKHHKSSSSSKHHK.KHK",
+            "..KwKKHKRRKRRKHK..KHK",
+            "...KwKKwRWWWRwK...KHK",
+            "......KwWWWWWwwK..KHK",
+            "......KwWWWWWwSK...K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .wave2: [
+            "KSK.KHSSSSsSSSSHK.KHK",
+            ".KwKKHHKSSSSSKHHK.KHK",
+            "..KwKKHKRRKRRKHK..KHK",
+            "...KwKKwRWWWRwK...KHK",
+            "......KwWWWWWwwK..KHK",
+            "......KwWWWWWwSK...K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .drumLeft: [
+            "...TKHSSSSsSSSSHK.KHK",
+            "...TKHHKSSSSSKHHK.KHK",
+            "..KSKKHKRRKRRKHK..KHK",
+            "...KwKKwRWWWRwK...KHK",
+            "......KwWWWWWwwK..KHK",
+            "......KwWWWWWwSKTT.K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .drumRight: [
+            "....KHSSSSsSSSSHKTKHK",
+            "....KHHKSSSSSKHHKTKHK",
+            ".....KHKRRKRRKHKKSKHK",
+            "......KwRWWWRwKwK.KHK",
+            ".....KwwWWWWWwK...KHK",
+            "...TTKSwWWWWWwK....K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .flailLeft: [
+            "....KHSSSSsSSSSHK.KHK",
+            "....KHHKSSSSSKHHK.KHK",
+            "..KSKKHKRRKRRKHK..KHK",
+            "...KwKKwRWWWRwK...KHK",
+            "......KwWWWWWwwK..KHK",
+            "......KwWWWWWwSK...K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        case .flailRight: [
+            "....KHSSSSsSSSSHK.KHK",
+            "....KHHKSSSSSKHHK.KHK",
+            ".....KHKRRKRRKHKKSKHK",
+            "......KwRWWWRwKwK.KHK",
+            ".....KwwWWWWWwK...KHK",
+            ".....KSwWWWWWwK....K.",
+            ".....KKDDDDDDDKK.....",
+            "....KDDDDDDDDDDDK....",
+            "....KdDdDdDdDdDdK....",
+            ".....KKKKKKKKKKK.....",
+        ]
+        }
+    }
 
     static func legs(_ legs: Legs) -> [String] {
         switch legs {
@@ -92,16 +181,31 @@ enum Sprites {
             ".........KLK.........",
             "........KRRRK........",
         ]
+        case .sit: [
+            "......KRRK.KRRK......",
+        ]
+        case .kickLeft: [
+            "......KLK..KLK.......",
+            ".....KRRK..KLK.......",
+            "...........KRRK......",
+        ]
+        case .kickRight: [
+            ".......KLK..KLK......",
+            ".......KLK..KRRK.....",
+            "......KRRK...........",
+        ]
         }
     }
 
-    static func frame(face f: Face, legs l: Legs) -> [String] {
-        head + face(f) + body + legs(l)
+    static func frame(face f: Face, arms a: Arms = .down, legs l: Legs) -> [String] {
+        head + face(f) + body(a) + legs(l)
     }
 
     static let rightHead = [
-        "..........K..........",
+        ".........K...........",
+        ".........KK..........",
         ".........KhK.........",
+        ".........KhHK........",
         "......KKKKKKKK.......",
         ".....KKHHhhhHHKK.....",
         "....KHHHhhHHHHHHK....",
@@ -166,8 +270,10 @@ enum Sprites {
     ]
 
     static let leftHead = [
-        "..........K..........",
+        "...........K.........",
+        "..........KK.........",
         ".........KhK.........",
+        "........KHhK.........",
         ".......KKKKKKKK......",
         ".....KKHHhhhHHKKK....",
         "....KHHHHHHhhHHHHK...",
@@ -236,6 +342,22 @@ enum Sprites {
             ? leftHead + leftFace(f) + leftBody + leftLegs[step]
             : rightHead + rightFace(f) + rightBody + rightLegs[step]
     }
+
+    static let note = [
+        "..KK.",
+        "..KKK",
+        "..K.K",
+        "KKK..",
+        "KKK..",
+    ]
+
+    static let zzz = [
+        "DDDDD",
+        "...D.",
+        "..D..",
+        ".D...",
+        "DDDDD",
+    ]
 
     static let heart = [
         ".KK.KK.",
