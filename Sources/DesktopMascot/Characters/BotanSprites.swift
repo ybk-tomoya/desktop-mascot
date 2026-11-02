@@ -17138,7 +17138,6 @@ extension MascotCharacter {
         id: "botan",
         name: "上伊那ぼたん",
         width: 48,
-        scale: 2.0,
         palette: BotanSprites.palette,
         glyphPalette: BotanSprites.glyphPalette,
         faces: BotanSprites.faces,

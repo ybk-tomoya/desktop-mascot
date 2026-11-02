@@ -35,7 +35,7 @@ extension Mascot {
     func isPetting() -> Bool {
         let m = NSEvent.mouseLocation
         let f = window.frame
-        let spriteHeight = CGFloat(character.height) * character.scale
+        let spriteHeight = CGFloat(character.height) * MascotView.scale
         let head = NSRect(x: f.minX, y: f.minY + spriteHeight * 0.55, width: f.width, height: spriteHeight * 0.45 + 8)
         guard head.contains(m), NSEvent.pressedMouseButtons == 0 else {
             petX = nil
@@ -69,7 +69,7 @@ extension Mascot {
     }
 
     func appBehind() -> String? {
-        let center = NSPoint(x: x + window.frame.width / 2, y: y + CGFloat(character.height) * character.scale / 2)
+        let center = NSPoint(x: x + window.frame.width / 2, y: y + CGFloat(character.height) * MascotView.scale / 2)
         return (desktopWindows.first { $0.frame.contains(center) } ?? ground(below: y).window)?.app
     }
 
@@ -287,7 +287,7 @@ extension Mascot {
             view.sprite = cached
         } else {
             let sprite = a.walkStep.map { character.walkFrame(blink: isBlinking, step: $0, facingLeft: direction < 0) }
-                ?? character.frame(face: a.face, arms: a.arms, legs: a.legs, breath: a.breath * character.detail)
+                ?? character.frame(face: a.face, arms: a.arms, legs: a.legs, breath: a.breath)
             frameCache[key] = sprite
             view.sprite = sprite
         }

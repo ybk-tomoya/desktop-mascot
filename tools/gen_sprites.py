@@ -199,7 +199,6 @@ extension MascotCharacter {{
         id: {s(mod.ID)},
         name: {s(mod.NAME)},
         width: {mod.W},
-        scale: {2 / getattr(mod, 'SS', 1)},
         palette: {t}.palette,
         glyphPalette: {t}.glyphPalette,
         faces: {t}.faces,
@@ -225,7 +224,7 @@ def main():
         old.unlink()
     mods = sorted((load(p) for p in (ROOT / "characters").glob("*.py")), key=lambda m: (m.ORDER, m.ID))
     for mod in mods:
-        engine.configure(mod.W, mod.H, mod.OY, getattr(mod, "SS", 1))
+        engine.configure(mod.W, mod.H, mod.OY)
         outfits = [(id, name, mod.build(id)) for id, name in getattr(mod, "OUTFITS", [("default", "標準")])]
         for id, _, data in outfits:
             check(mod, data, id)

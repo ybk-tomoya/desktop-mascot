@@ -8022,7 +8022,6 @@ extension MascotCharacter {
         id: "nijika",
         name: "伊地知虹夏",
         width: 48,
-        scale: 2.0,
         palette: NijikaSprites.palette,
         glyphPalette: NijikaSprites.glyphPalette,
         faces: NijikaSprites.faces,

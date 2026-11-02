@@ -2,6 +2,7 @@ import AppKit
 
 @MainActor
 final class MascotView: NSView {
+    static let scale: CGFloat = 2
     static let headroom: CGFloat = 48
 
     var character: MascotCharacter
@@ -27,13 +28,13 @@ final class MascotView: NSView {
     }
 
     static func size(for character: MascotCharacter) -> NSSize {
-        NSSize(width: CGFloat(character.width) * character.scale, height: CGFloat(character.height) * character.scale + headroom)
+        NSSize(width: CGFloat(character.width) * Self.scale, height: CGFloat(character.height) * Self.scale + headroom)
     }
 
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
-        let s = character.scale
+        let s = Self.scale
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         if let cutoff {
             NSRect(x: 0, y: 0, width: bounds.width, height: cutoff).clip()
@@ -84,7 +85,7 @@ final class MascotView: NSView {
     }
 
     func hitsSprite(at p: NSPoint) -> Bool {
-        let s = character.scale
+        let s = Self.scale
         if let cutoff, p.y > cutoff { return false }
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         let x = Int(p.x / s), y = Int((p.y - top) / s)
