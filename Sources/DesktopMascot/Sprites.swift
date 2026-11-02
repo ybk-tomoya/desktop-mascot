@@ -38,6 +38,7 @@ enum MascotLift {
     case hop(height: CGFloat, period: Int)
     case rise(height: CGFloat, from: Int, to: Int)
     case sink(height: CGFloat)
+    case cling(height: CGFloat)
 
     func offset(t: Int, length: Int) -> CGFloat {
         switch self {
@@ -48,7 +49,7 @@ enum MascotLift {
             return sin(CGFloat(t % period) / CGFloat(period) * .pi) * h
         case .rise(let h, let from, let to):
             return t > from && t < to ? h : 0
-        case .sink(let h):
+        case .sink(let h), .cling(let h):
             return -h
         }
     }
@@ -76,7 +77,7 @@ struct MascotSnack {
 
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, chained
     }
 
     let name: String

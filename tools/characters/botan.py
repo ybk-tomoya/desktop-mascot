@@ -6,7 +6,7 @@ W, H, OY = 48, 72, 4
 ORDER = 1
 OUTFITS = [("pajama", "パジャマ"), ("casual", "私服"), ("cami", "キャミ＋短パン"), ("cardigan", "カーディガン"), ("dress", "ワンピース")]
 ACCESSORIES = ["cap", "glasses", "ribbon"]
-ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "cheers", "behindHead", "typeLeft", "typeRight")
+ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "cheers", "behindHead", "typeLeft", "typeRight", "grab")
 LEGS = ("stand", "together", "sit", "kickLeft", "kickRight", "dangleLeft", "dangleRight")
 configure(W, H, OY)
 
@@ -198,12 +198,17 @@ def front_arms(kind, outfit):
         "behindHead": ((LS, (9.5, 23), (12.5, 12)), (RS, (38.5, 23), (35.5, 12))),
         "typeLeft": ((LS, (14.5, 38), (20.5, 38.5)), (RS, (33.5, 38), (27.5, 41))),
         "typeRight": ((LS, (14.5, 38), (20.5, 41)), (RS, (33.5, 38), (27.5, 38.5))),
+        "grab": ((LS, (9, 22), (8.5, 4)), (RS, (30, 31), (39.5, 4)) if False else (RS, (39, 22), (39.5, 4))),
         "cheers": (down_l, (RS, (38.5, 28), (38.5, 20))),
     }
     for sh, e, hnd in poses[kind]:
         paint_arm(L, outfit, sh, e, hnd)
     if kind == "cheers":
         L.paint(poly([(35.5, 12.5), (41.5, 12.5), (40.5, 18.5), (36.5, 18.5)]), "W", "cup")
+    if kind == "grab":
+        for ex, hx in ((9, 8.5), (39, 39.5)):
+            L.paint(line((ex, 22), (hx, 5), 1.9), "S", "arm")
+            L.paint(ellipse(hx, 4, 3, 2.8), "S", "hand")
     if kind == "peace":
         L.paint(line((13, 24), (12, 20), 0.7) + line((14.5, 24), (15.5, 20), 0.7), "S", "hand")
     return L.outline().rows()
@@ -545,6 +550,18 @@ ACTIONS = [
     {"name": "ledgeSit", "trigger": "ledge", "weight": 2, "duration": (100, 200),
      "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
      "lift": {"type": "sink", "height": 36}},
+    {"name": "sitTop", "trigger": "top", "duration": (100, 200),
+     "frames": [{"face": "happy", "legs": "dangleLeft", "ticks": 8}, {"face": "happy", "legs": "dangleRight", "ticks": 8}],
+     "lift": {"type": "sink", "height": 36}},
+    {"name": "hang", "trigger": "ledge", "weight": 1, "duration": (80, 160),
+     "frames": [{"face": "panic", "arms": "grab", "legs": "dangleLeft", "ticks": 6}, {"face": "panic", "arms": "grab", "legs": "dangleRight", "ticks": 6}],
+     "lift": {"type": "sink", "height": 124}},
+    {"name": "cling", "trigger": "ledge", "weight": 1, "duration": (60, 100),
+     "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
+     "lift": {"type": "cling", "height": 117}},
+    {"name": "clingTop", "trigger": "top", "duration": (60, 100),
+     "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
+     "lift": {"type": "cling", "height": 117}},
     {"name": "ledgePeek", "trigger": "ledge", "weight": 1, "duration": (40, 40),
      "frames": [{"face": "lookDown"}],
      "effect": {"glyph": "question", "dx": [14]}},

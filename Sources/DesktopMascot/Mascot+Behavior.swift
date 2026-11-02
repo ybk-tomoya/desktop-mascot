@@ -81,6 +81,7 @@ extension Mascot {
         appearance = Appearance(face: isBlinking ? "blink" : "normal")
         view.lift = 0
         view.effect = nil
+        view.cutoff = nil
         sink = 0
         if tick % 10 == 0 {
             desktopWindows = Desktop.windows()
@@ -128,6 +129,9 @@ extension Mascot {
         let offset = a.lift?.offset(t: t, length: length) ?? 0
         view.lift = max(0, offset)
         sink = min(0, offset)
+        if case .cling = a.lift {
+            view.cutoff = view.bounds.height + sink
+        }
         if let e = a.effect, let glyph = character.glyphs[e.glyph], let (progress, dx) = e.state(t: t, length: length) {
             view.effect = (glyph, progress, dx)
         }
@@ -163,7 +167,8 @@ extension Mascot {
         if snack?.landed == true {
             state = .fetching
         } else if ticks <= 0 {
-            start(character.randomAction(.idle, app: appBehind()))
+            let onWindow = ground(below: y).window != nil
+            start(onWindow && Int.random(in: 0..<3) == 0 ? character.randomAction(.top) : character.randomAction(.idle, app: appBehind()))
         } else {
             state = .idle(ticks: ticks - 1)
         }

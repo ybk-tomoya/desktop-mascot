@@ -117,6 +117,7 @@ def action(a):
             "hop": lambda: f".hop(height: {l['height']}, period: {l['period']})",
             "rise": lambda: f".rise(height: {l['height']}, from: {l['from']}, to: {l['to']})",
             "sink": lambda: f".sink(height: {l['height']})",
+            "cling": lambda: f".cling(height: {l['height']})",
         }[l["type"]]()
     effect = "nil"
     if "effect" in a:

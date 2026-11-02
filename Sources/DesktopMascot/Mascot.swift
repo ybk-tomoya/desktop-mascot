@@ -14,6 +14,8 @@ final class Mascot: NSObject, NSMenuDelegate {
     }
 
     static let fps = 20.0
+    static let glideFps = 60.0
+    static let glideJump: CGFloat = 150
     static let speed: CGFloat = 2
     static let gravity: CGFloat = 1.2
     static let lookDistance: CGFloat = 300
@@ -56,6 +58,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     var sink: CGFloat = 0
     var appearance = Appearance()
     var overMascot = false
+    var glide: (from: NSPoint, to: NSPoint, start: TimeInterval)?
 
     override init() {
         character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))
@@ -137,6 +140,10 @@ final class Mascot: NSObject, NSMenuDelegate {
 
         Timer.scheduledTimer(withTimeInterval: 1 / Self.fps, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.step() }
+        }
+
+        Timer.scheduledTimer(withTimeInterval: 1 / Self.glideFps, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.stepGlide() }
         }
 
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
@@ -302,6 +309,21 @@ final class Mascot: NSObject, NSMenuDelegate {
         }
         x = min(max(x, area.minX), area.maxX - window.frame.width)
         y = min(max(y, area.minY), area.maxY - window.frame.height)
-        window.setFrameOrigin(NSPoint(x: x, y: y + sink))
+        let target = NSPoint(x: x, y: y + sink)
+        var dragging = false
+        if case .dragging = state { dragging = true }
+        if dragging || hypot(target.x - window.frame.origin.x, target.y - window.frame.origin.y) > Self.glideJump {
+            glide = nil
+            window.setFrameOrigin(target)
+        } else {
+            glide = (window.frame.origin, target, ProcessInfo.processInfo.systemUptime)
+        }
+    }
+
+    func stepGlide() {
+        guard let g = glide else { return }
+        let t = min(1, (ProcessInfo.processInfo.systemUptime - g.start) * Self.fps)
+        window.setFrameOrigin(NSPoint(x: g.from.x + (g.to.x - g.from.x) * t, y: g.from.y + (g.to.y - g.from.y) * t))
+        if t >= 1 { glide = nil }
     }
 }

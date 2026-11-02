@@ -8,6 +8,7 @@ final class MascotView: NSView {
     var character: MascotCharacter
     var sprite: [String]
     var lift: CGFloat = 0
+    var cutoff: CGFloat?
     var effect: (glyph: [String], progress: CGFloat, dx: CGFloat)?
     var onClick: (() -> Void)?
     var onDrag: ((CGFloat, CGFloat) -> Void)?
@@ -35,6 +36,9 @@ final class MascotView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         let s = Self.scale
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
+        if let cutoff {
+            NSRect(x: 0, y: 0, width: bounds.width, height: cutoff).clip()
+        }
         for (y, row) in sprite.enumerated() {
             for (x, c) in row.enumerated() {
                 guard let color = character.palette[c] else { continue }
@@ -76,6 +80,7 @@ final class MascotView: NSView {
 
     func hitsSprite(at p: NSPoint) -> Bool {
         let s = Self.scale
+        if let cutoff, p.y > cutoff { return false }
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         let x = Int(p.x / s), y = Int((p.y - top) / s)
         let row = sprite.indices.contains(y) ? Array(sprite[y]) : []
