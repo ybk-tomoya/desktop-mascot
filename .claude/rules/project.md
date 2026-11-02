@@ -7,7 +7,7 @@ macOS のデスクトップマスコットアプリ（Swift / AppKit、Xcode プ
 - 変更後はビルドしてアプリを再起動し、ユーザーがすぐ実物を見られるようにする
 - `Sources/DesktopMascot/main.swift`: 起動処理だけ
 - `Sources/DesktopMascot/Mascot.swift`: ウィンドウ・メニュー・キャラ切り替えと、状態を持つ変数（extension には保存プロパティを置けないのでここに残す）
-- `Sources/DesktopMascot/Mascot+Behavior.swift`: 状態遷移（歩く・まばたき・視線・ドラッグ・重力だけが組み込み。他のアクションはキャラ設定を再生する）。`step()` は状態ごとの `stepXxx` を呼ぶだけ
+- `Sources/DesktopMascot/Mascot+Behavior.swift`: 状態遷移（歩く・まばたき・視線・ドラッグ・重力・ウィンドウへのジャンプ移動だけが組み込み。他のアクションはキャラ設定を再生する）。`step()` は状態ごとの `stepXxx` を呼ぶだけ
 - `Sources/DesktopMascot/MascotView.swift`: 描画とマウス入力
 - `Sources/DesktopMascot/Desktop.swift`: 画面上の他アプリのウィンドウ一覧
 - `Sources/DesktopMascot/Sprites.swift`: `MascotCharacter` / `MascotAction` などのデータ型とレイヤー合成

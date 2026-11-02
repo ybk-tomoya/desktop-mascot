@@ -6,7 +6,7 @@ W, H, OY = 48, 72, 4
 ORDER = 0
 OUTFITS = [("uniform", "制服"), ("casual", "私服")]
 ACCESSORIES = ["cap", "glasses", "ribbon"]
-ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace", "heart", "behindHead", "typeLeft", "typeRight", "grab")
+ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace", "heart", "behindHead", "typeLeft", "typeRight", "grab", "peek")
 LEGS = ("stand", "together", "sit", "kickLeft", "kickRight", "dangleLeft", "dangleRight")
 configure(W, H, OY)
 
@@ -110,6 +110,7 @@ def front_arms(kind, outfit):
         "typeLeft": ((LS, (14.5, 38), (20.5, 38.5)), (RS, (33.5, 38), (27.5, 41))),
         "typeRight": ((LS, (14.5, 38), (20.5, 41)), (RS, (33.5, 38), (27.5, 38.5))),
         "grab": ((LS, (9, 22), (8.5, 4)), (RS, (30, 31), (39.5, 4)) if False else (RS, (39, 22), (39.5, 4))),
+        "peek": ((LS, (11.5, 35), (9.5, 33)), (RS, (36.5, 35), (38.5, 33))),
     }
     sticks = {
         "drumLeft": [((12, 24), (9, 16)), ((30, 40), (24, 44))],
@@ -358,6 +359,7 @@ ACTIONS = [
      "next": {"sneezeSniff": 1}},
     {"name": "sneezeSniff", "trigger": "chained", "duration": (36, 36),
      "frames": [{"face": "shy", "legs": "together"}]},
+    {"name": "jumpUp", "trigger": "jump", "frames": [{"face": "happy", "legs": "together"}], "next": {"hop": 1}},
     {"name": "hop", "trigger": "idle", "weight": 2, "duration": (45, 45),
      "frames": [{"face": "happy", "legs": "together"}],
      "lift": {"type": "hop", "height": 12, "period": 15}},
@@ -418,8 +420,8 @@ ACTIONS = [
      "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
      "lift": {"type": "cling", "height": 117}},
     {"name": "clingTop", "trigger": "top", "duration": (120, 160),
-     "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
-     "lift": {"type": "cling", "height": 117}},
+     "frames": [{"arms": "peek"}],
+     "lift": {"type": "cling", "height": 68}},
     {"name": "ledgePeek", "trigger": "ledge", "weight": 1, "duration": (40, 40),
      "frames": [{"face": "lookDown"}],
      "effect": {"glyph": "question", "dx": [14]}},

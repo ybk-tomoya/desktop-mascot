@@ -11,6 +11,7 @@ final class Mascot: NSObject, NSMenuDelegate {
         case falling(MascotAction?, velocity: CGFloat, t: Int)
         case thrown(MascotAction?, vx: CGFloat, vy: CGFloat, t: Int, strength: CGFloat)
         case fetching
+        case jumping(MascotAction?, from: NSPoint, to: NSPoint, t: Int, length: Int)
     }
 
     static let fps = 20.0
@@ -27,6 +28,9 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
     static let ledgeMargin: CGFloat = 12
+    static let jumpHeightRatio: CGFloat = 2.5
+    static let jumpReach: CGFloat = 36
+    static let jumpChance = 0.02
 
     let window: NSPanel
     let view: MascotView

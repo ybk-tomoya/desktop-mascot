@@ -55,9 +55,9 @@ extension Mascot {
         return true
     }
 
-    func ground(below top: CGFloat) -> (y: CGFloat, span: ClosedRange<CGFloat>, window: DesktopWindow?) {
+    func ground(below top: CGFloat, cx: CGFloat? = nil) -> (y: CGFloat, span: ClosedRange<CGFloat>, window: DesktopWindow?) {
         let area = self.area
-        let cx = x + window.frame.width / 2
+        let cx = cx ?? x + window.frame.width / 2
         var best = (y: area.minY, span: area.minX...area.maxX, window: DesktopWindow?.none)
         for (i, w) in desktopWindows.enumerated() {
             let f = w.frame
@@ -101,6 +101,7 @@ extension Mascot {
         case .thrown(let a, let vx, let vy, let t, let strength): stepThrown(a, vx: vx, vy: vy, t: t, strength: strength)
         case .fetching: stepFetching()
         case .falling(let a, let v, let t): stepFalling(a, velocity: v, t: t)
+        case .jumping(let a, let from, let to, let t, let length): stepJumping(a, from: from, to: to, t: t, length: length)
         }
 
         render()
@@ -194,6 +195,12 @@ extension Mascot {
         x += direction * Self.speed
         appearance.walkStep = (tick / 4) % 4
         state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .walking(ticks: ticks - 1)
+        if let target = jumpTarget(), Double.random(in: 0..<1) < Self.jumpChance, let a = character.randomAction(.jump) {
+            let length = min(36, max(14, Int(hypot(target.x - x, target.y - y) / 12)))
+            appearance.walkStep = nil
+            state = .jumping(a, from: NSPoint(x: x, y: y), to: target, t: 0, length: length)
+            return
+        }
         if !range.contains(x) {
             x = min(max(x, range.lowerBound), range.upperBound)
             if Bool.random(), let a = character.randomAction(g.window == nil ? .wall : .ledge) {
@@ -249,6 +256,49 @@ extension Mascot {
             }
         }
         state = .thrown(a, vx: vx, vy: vy, t: t + 1, strength: strength)
+    }
+
+    func jumpTarget() -> NSPoint? {
+        let w = window.frame.width
+        let cx = x + w / 2
+        let inset = Self.ledgeMargin + w / 2 + 8
+        for win in desktopWindows {
+            let f = win.frame
+            let rise = f.maxY - y
+            guard rise > 8, rise <= CGFloat(character.height) * MascotView.scale * Self.jumpHeightRatio, f.maxY + window.frame.height <= area.maxY,
+                  f.width > inset * 2 else { continue }
+            let edge = direction > 0 ? f.minX : f.maxX
+            let distance = (edge - cx) * direction
+            let landing: CGFloat
+            if f.minX + inset <= cx, cx <= f.maxX - inset {
+                landing = cx
+            } else if distance >= 0, distance <= Self.jumpReach {
+                landing = edge + direction * inset
+            } else {
+                continue
+            }
+            guard ground(below: f.maxY + 1, cx: landing).window?.frame == f else { continue }
+            return NSPoint(x: landing - w / 2, y: f.maxY)
+        }
+        return nil
+    }
+
+    func stepJumping(_ a: MascotAction?, from: NSPoint, to: NSPoint, t: Int, length: Int) {
+        perform(a, t: t, length: length)
+        let p = CGFloat(t + 1) / CGFloat(length)
+        x = from.x + (to.x - from.x) * p
+        y = from.y + (to.y - from.y) * p + sin(p * .pi) * (24 + abs(to.y - from.y) * 0.3)
+        if t + 1 >= length {
+            x = to.x
+            y = to.y
+            if let a {
+                finish(a)
+            } else {
+                state = .idle(ticks: Int.random(in: Self.restRange))
+            }
+        } else {
+            state = .jumping(a, from: from, to: to, t: t + 1, length: length)
+        }
     }
 
     func stepFetching() {
