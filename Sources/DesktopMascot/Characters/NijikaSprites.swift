@@ -1070,7 +1070,7 @@ enum NijikaSprites {
         MascotAction(name: "cling", trigger: .ledge, weight: 1, walk: false, duration: 60...100, strength: nil, apps: nil,
                      frames: [MascotPose(face: nil, arms: "grab", legs: "stand", ticks: 8), MascotPose(face: nil, arms: "grab", legs: "stand", ticks: 8)],
                      lift: .cling(height: 117), effect: nil, next: []),
-        MascotAction(name: "clingTop", trigger: .top, weight: 1, walk: false, duration: 200...400, strength: nil, apps: nil,
+        MascotAction(name: "clingTop", trigger: .top, weight: 1, walk: false, duration: 120...160, strength: nil, apps: nil,
                      frames: [MascotPose(face: nil, arms: "grab", legs: "stand", ticks: 8), MascotPose(face: nil, arms: "grab", legs: "stand", ticks: 8)],
                      lift: .cling(height: 117), effect: nil, next: []),
         MascotAction(name: "ledgePeek", trigger: .ledge, weight: 1, walk: false, duration: 40...40, strength: nil, apps: nil,

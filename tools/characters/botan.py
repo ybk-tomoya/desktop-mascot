@@ -571,7 +571,7 @@ ACTIONS = [
     {"name": "cling", "trigger": "ledge", "weight": 1, "duration": (60, 100),
      "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
      "lift": {"type": "cling", "height": 117}},
-    {"name": "clingTop", "trigger": "top", "duration": (200, 400),
+    {"name": "clingTop", "trigger": "top", "duration": (120, 160),
      "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
      "lift": {"type": "cling", "height": 117}},
     {"name": "ledgePeek", "trigger": "ledge", "weight": 1, "duration": (40, 40),
