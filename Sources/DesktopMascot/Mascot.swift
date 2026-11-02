@@ -27,8 +27,6 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
     static let ledgeMargin: CGFloat = 12
-    static let iconRows = 37
-    static let iconPixel: CGFloat = 0.5
 
     let window: NSPanel
     let view: MascotView
@@ -59,6 +57,10 @@ final class Mascot: NSObject, NSMenuDelegate {
     var appearance = Appearance()
     var overMascot = false
     var glide: (from: NSPoint, to: NSPoint, start: TimeInterval)?
+    var frameCache: [String: [String]] = [:]
+    var lastFrameKey = ""
+    var lastLift: CGFloat = 0
+    var lastCutoff: CGFloat?
 
     override init() {
         character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))
@@ -192,6 +194,7 @@ final class Mascot: NSObject, NSMenuDelegate {
         let c = Self.dressed(next)
         character = c
         view.character = c
+        resetFrames()
         state = .idle(ticks: Int.random(in: Self.restRange))
         let size = MascotView.size(for: c)
         window.setContentSize(size)
@@ -217,22 +220,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     }
 
     func updateStatusIcon() {
-        let rows = Array(character.frame(face: "normal", arms: "down", legs: "stand").prefix(Self.iconRows))
-        let columns = rows.flatMap { row in row.enumerated().filter { character.palette[$0.element] != nil }.map(\.offset) }
-        guard let first = columns.min(), let last = columns.max() else { return }
-        let pixel = Self.iconPixel
-        let image = NSImage(size: NSSize(width: CGFloat(last - first + 1) * pixel, height: CGFloat(rows.count) * pixel))
-        image.lockFocus()
-        NSGraphicsContext.current?.shouldAntialias = false
-        for (y, row) in rows.enumerated() {
-            for (x, c) in row.enumerated() where x >= first && x <= last {
-                guard let color = character.palette[c] else { continue }
-                color.setFill()
-                NSRect(x: CGFloat(x - first) * pixel, y: CGFloat(rows.count - 1 - y) * pixel, width: pixel, height: pixel).fill()
-            }
-        }
-        image.unlockFocus()
-        statusItem.button?.image = image
+        statusItem.button?.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Desktop Mascot")
     }
 
     func refreshWardrobe() {
@@ -258,6 +246,7 @@ final class Mascot: NSObject, NSMenuDelegate {
         guard let i = character.outfits.firstIndex(where: { $0.id == sender.representedObject as? String }) else { return }
         character.outfitIndex = i
         view.character = character
+        resetFrames()
         UserDefaults.standard.set(character.outfit.id, forKey: Self.outfitKeyPrefix + character.id)
         refreshWardrobe()
         updateStatusIcon()
@@ -271,6 +260,7 @@ final class Mascot: NSObject, NSMenuDelegate {
             character.worn.insert(id)
         }
         view.character = character
+        resetFrames()
         UserDefaults.standard.set(Array(character.worn), forKey: Self.wornKeyPrefix + character.id)
         refreshWardrobe()
         updateStatusIcon()

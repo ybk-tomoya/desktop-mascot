@@ -2,7 +2,6 @@ import AppKit
 
 @MainActor
 final class MascotView: NSView {
-    static let scale: CGFloat = 2
     static let headroom: CGFloat = 48
 
     var character: MascotCharacter
@@ -28,22 +27,28 @@ final class MascotView: NSView {
     }
 
     static func size(for character: MascotCharacter) -> NSSize {
-        NSSize(width: CGFloat(character.width) * scale, height: CGFloat(character.height) * scale + headroom)
+        NSSize(width: CGFloat(character.width) * character.scale, height: CGFloat(character.height) * character.scale + headroom)
     }
 
     override var isFlipped: Bool { true }
 
     override func draw(_ dirtyRect: NSRect) {
-        let s = Self.scale
+        let s = character.scale
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         if let cutoff {
             NSRect(x: 0, y: 0, width: bounds.width, height: cutoff).clip()
         }
         for (y, row) in sprite.enumerated() {
-            for (x, c) in row.enumerated() {
-                guard let color = character.palette[c] else { continue }
-                color.setFill()
-                NSRect(x: CGFloat(x) * s, y: top + CGFloat(y) * s, width: s, height: s).fill()
+            let chars = Array(row)
+            var x = 0
+            while x < chars.count {
+                var end = x + 1
+                while end < chars.count && chars[end] == chars[x] { end += 1 }
+                if let color = character.palette[chars[x]] {
+                    color.setFill()
+                    NSRect(x: CGFloat(x) * s, y: top + CGFloat(y) * s, width: CGFloat(end - x) * s, height: s).fill()
+                }
+                x = end
             }
         }
 
@@ -79,7 +84,7 @@ final class MascotView: NSView {
     }
 
     func hitsSprite(at p: NSPoint) -> Bool {
-        let s = Self.scale
+        let s = character.scale
         if let cutoff, p.y > cutoff { return false }
         let top = bounds.height - CGFloat(sprite.count) * s - (lift / s).rounded() * s
         let x = Int(p.x / s), y = Int((p.y - top) / s)

@@ -113,6 +113,7 @@ struct MascotCharacter {
     let id: String
     let name: String
     let width: Int
+    let scale: CGFloat
     let palette: [Character: NSColor]
     let glyphPalette: [Character: NSColor]
     let faces: [String: [String]]
@@ -130,20 +131,21 @@ struct MascotCharacter {
     var arms: [String: [String]] { outfit.arms }
     var legs: [String: [String]] { outfit.legs }
     var height: Int { body.count }
+    var detail: Int { Int(2 / scale) }
 
     private var wornAccessories: [MascotAccessory] {
         accessories.filter { worn.contains($0.id) }
     }
 
-    func frame(face f: String, arms a: String, legs l: String) -> [String] {
+    func frame(face f: String, arms a: String, legs l: String, breath: Int = 0) -> [String] {
         let upper = Sprites.overlay([body, arms[a] ?? arms["down"]!, faces[f] ?? faces["normal"]!] + wornAccessories.map(\.front))
-        return Sprites.overlay([legs[l] ?? legs["stand"]!, Sprites.lowered(upper, by: drops[l] ?? 0)])
+        return Sprites.overlay([legs[l] ?? legs["stand"]!, Sprites.lowered(upper, by: (drops[l] ?? 0) + breath)])
     }
 
     func walkFrame(blink: Bool, step: Int, facingLeft: Bool) -> [String] {
         let side = facingLeft ? outfit.left : outfit.right
         let upper = Sprites.overlay([side.body, side.arms[step], blink ? side.blink : side.face] + wornAccessories.map { facingLeft ? $0.left : $0.right })
-        return Sprites.overlay([side.legs[step], step % 2 == 1 ? Sprites.raised(upper, by: 1) : upper])
+        return Sprites.overlay([side.legs[step], step % 2 == 1 ? Sprites.raised(upper, by: detail) : upper])
     }
 
     func action(named name: String) -> MascotAction? {

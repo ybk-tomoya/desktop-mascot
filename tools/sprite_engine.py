@@ -1,6 +1,7 @@
 import math
 
 W, H, OY = 0, 0, 0
+SS = 1
 YR = range(0)
 
 WALK_STEPS = 4
@@ -41,14 +42,14 @@ GLYPHS = {
 }
 
 
-def configure(w, h, oy):
-    global W, H, OY, YR
-    W, H, OY = w, h, oy
+def configure(w, h, oy, ss=1):
+    global W, H, OY, SS, YR
+    W, H, OY, SS = w, h, oy, ss
     YR = range(-oy, h - oy)
 
 
 CLASS = {
-    "tail": "tail", "hairback": "hair", "bangs": "hair", "lock": "hair", "ahoge": "ahoge",
+    "tail": "tail", "hairback": "hair", "bangs": "hair", "lock": "hair", "sidelock": "sidelock", "ahoge": "ahoge",
     "face": "skin", "neck": "skin", "leg": "skin", "hand": "skin", "arm": "skin",
     "shirt": "shirt", "sleeve": "shirt", "bow": "bow", "tie": "bow",
     "skirt": "skirt", "sock": "sock", "shoe": "shoe", "stick": "stick",
@@ -106,12 +107,12 @@ class Layer:
         return ["".join(ch or "." for ch in row) for row in self.c]
 
 
-def ellipse(cx, cy, rx, ry):
+def _ellipse(cx, cy, rx, ry):
     return [(x, y) for y in YR for x in range(W)
             if ((x + 0.5 - cx) / rx) ** 2 + ((y + 0.5 - cy) / ry) ** 2 <= 1]
 
 
-def poly(points):
+def _poly(points):
     res = []
     n = len(points)
     for y in YR:
@@ -129,11 +130,11 @@ def poly(points):
     return res
 
 
-def rect(x0, y0, x1, y1):
+def _rect(x0, y0, x1, y1):
     return [(x, y) for y in range(y0, y1 + 1) for x in range(x0, x1 + 1)]
 
 
-def line(p, q, r):
+def _line(p, q, r):
     (x1, y1), (x2, y2) = p, q
     res = []
     L2 = (x2 - x1) ** 2 + (y2 - y1) ** 2 or 1
@@ -146,7 +147,7 @@ def line(p, q, r):
     return res
 
 
-def taper(p, q, r1, r2):
+def _taper(p, q, r1, r2):
     (x1, y1), (x2, y2) = p, q
     res = []
     L2 = (x2 - x1) ** 2 + (y2 - y1) ** 2 or 1
@@ -160,8 +161,38 @@ def taper(p, q, r1, r2):
     return res
 
 
-def where(pts, cond):
+def _where(pts, cond):
     return [(x, y) for x, y in pts if cond(x, y)]
+
+
+def ellipse(cx, cy, rx, ry):
+    return _ellipse(cx * SS, cy * SS, rx * SS, ry * SS)
+
+
+def poly(points):
+    return _poly([(x * SS, y * SS) for x, y in points])
+
+
+def rect(x0, y0, x1, y1):
+    return _rect(x0 * SS, y0 * SS, (x1 + 1) * SS - 1, (y1 + 1) * SS - 1)
+
+
+def line(p, q, r):
+    return _line((p[0] * SS, p[1] * SS), (q[0] * SS, q[1] * SS), r * SS)
+
+
+def taper(p, q, r1, r2):
+    return _taper((p[0] * SS, p[1] * SS), (q[0] * SS, q[1] * SS), r1 * SS, r2 * SS)
+
+
+def where(pts, cond):
+    if SS == 1:
+        return _where(pts, cond)
+    return _where(pts, lambda x, y: cond(x / SS, y / SS))
+
+
+def pixels(pts):
+    return [(x * SS + dx, y * SS + dy) for x, y in pts for dy in range(SS) for dx in range(SS)]
 
 
 def mirror(rows):
@@ -178,7 +209,7 @@ def front_accessories():
         ring = [p for p in ellipse(cx, 20, 5, 4.6) if p not in ellipse(cx, 20, 3.6, 3.2)]
         glasses.paint(ring, "4", "frame")
     glasses.paint(rect(23, 19, 24, 19), "4", "frame")
-    glasses.paint([(16, 17), (17, 17), (27, 17), (28, 17)], "5", "glint")
+    glasses.paint(pixels([(16, 17), (17, 17), (27, 17), (28, 17)]), "5", "glint")
     ribbon = Layer()
     ribbon.paint(poly([(15, 6), (9, 2), (9, 10)]) + poly([(15, 6), (21, 2), (21, 10)]), "6", "loop")
     ribbon.paint(rect(14, 5, 16, 7), "7", "knot")
@@ -194,7 +225,7 @@ def side_accessories(sx):
     ring = [p for p in ellipse(sx + 7, 20, 5, 4.6) if p not in ellipse(sx + 7, 20, 3.6, 3.2)]
     glasses.paint(ring, "4", "frame")
     glasses.paint(rect(sx - 4, 19, sx + 2, 19), "4", "frame")
-    glasses.paint([(sx + 5, 17), (sx + 6, 17)], "5", "glint")
+    glasses.paint(pixels([(sx + 5, 17), (sx + 6, 17)]), "5", "glint")
     ribbon = Layer()
     ribbon.paint(poly([(sx - 6, 6), (sx - 12, 2), (sx - 12, 10)]) + poly([(sx - 6, 6), (sx, 2), (sx, 10)]), "6", "loop")
     ribbon.paint(rect(sx - 7, 5, sx - 5, 7), "7", "knot")

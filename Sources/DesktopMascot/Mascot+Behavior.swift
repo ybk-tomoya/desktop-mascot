@@ -5,6 +5,7 @@ struct Appearance {
     var arms = "down"
     var legs = "stand"
     var walkStep: Int?
+    var breath = 0
 }
 
 extension Mascot {
@@ -34,7 +35,7 @@ extension Mascot {
     func isPetting() -> Bool {
         let m = NSEvent.mouseLocation
         let f = window.frame
-        let spriteHeight = CGFloat(character.height) * MascotView.scale
+        let spriteHeight = CGFloat(character.height) * character.scale
         let head = NSRect(x: f.minX, y: f.minY + spriteHeight * 0.55, width: f.width, height: spriteHeight * 0.45 + 8)
         guard head.contains(m), NSEvent.pressedMouseButtons == 0 else {
             petX = nil
@@ -68,7 +69,7 @@ extension Mascot {
     }
 
     func appBehind() -> String? {
-        let center = NSPoint(x: x + window.frame.width / 2, y: y + CGFloat(character.height) * MascotView.scale / 2)
+        let center = NSPoint(x: x + window.frame.width / 2, y: y + CGFloat(character.height) * character.scale / 2)
         return (desktopWindows.first { $0.frame.contains(center) } ?? ground(below: y).window)?.app
     }
 
@@ -77,6 +78,7 @@ extension Mascot {
     }
 
     func step() {
+        guard window.isVisible else { return }
         tick += 1
         appearance = Appearance(face: isBlinking ? "blink" : "normal")
         view.lift = 0
@@ -172,6 +174,7 @@ extension Mascot {
         } else {
             state = .idle(ticks: ticks - 1)
         }
+        appearance.breath = (60..<84).contains(tick % 100) ? 1 : 0
         let m = NSEvent.mouseLocation
         let dx = m.x - window.frame.midX
         if appearance.face == "normal" && abs(dx) > 30 && hypot(dx, m.y - window.frame.midY) < Self.lookDistance {
@@ -279,9 +282,26 @@ extension Mascot {
 
     func render() {
         let a = appearance
-        view.sprite = a.walkStep.map { character.walkFrame(blink: isBlinking, step: $0, facingLeft: direction < 0) }
-            ?? character.frame(face: a.face, arms: a.arms, legs: a.legs)
-        view.needsDisplay = true
+        let key = a.walkStep.map { "walk\($0)\(direction < 0)\(isBlinking)" } ?? "\(a.face)|\(a.arms)|\(a.legs)|\(a.breath)"
+        if let cached = frameCache[key] {
+            view.sprite = cached
+        } else {
+            let sprite = a.walkStep.map { character.walkFrame(blink: isBlinking, step: $0, facingLeft: direction < 0) }
+                ?? character.frame(face: a.face, arms: a.arms, legs: a.legs, breath: a.breath * character.detail)
+            frameCache[key] = sprite
+            view.sprite = sprite
+        }
+        if key != lastFrameKey || view.lift != lastLift || view.cutoff != lastCutoff || view.effect != nil {
+            view.needsDisplay = true
+        }
+        lastFrameKey = key
+        lastLift = view.lift
+        lastCutoff = view.cutoff
         updatePosition()
+    }
+
+    func resetFrames() {
+        frameCache.removeAll()
+        lastFrameKey = ""
     }
 }
