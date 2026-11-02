@@ -397,9 +397,10 @@ def side_body(outfit):
     L.shade(hs(line((13.5, 21), (15, 44), 0.6)), "G", {"hairback"})
     side_clothes(L, outfit)
     L.paint(hs(poly([(22, 9), (30, 9), (33.5, 11.5), (35, 14), (35.5, 17), (35.5, 19.5), (36.5, 21), (35.6, 22), (35.6, 23.5),
-                     (34.8, 25), (33, 26.5), (30, 27.5), (26, 27.5), (23, 26)])), "S", "face")
-    L.paint(hs(poly([(18, 13), (22, 12), (23, 22), (21.5, 31), (19, 32)])), "H", "lock")
-    L.shade(hs(line((20.5, 18), (20.5, 30), 0.5)), "G", {"lock"})
+                     (34.8, 25), (33.5, 27.5), (30, 29), (26, 29), (23, 27)])), "S", "face")
+    L.paint(hs(poly([(21, 12), (25.5, 12), (27, 19), (26.5, 26), (24.5, 31), (22.5, 34), (22.5, 26), (21, 19)])), "H", "sidelock")
+    L.shade(hs(line((23.2, 15), (24, 30), 0.5)), "G", {"sidelock"})
+    L.shade(hs(line((25.5, 15), (26, 22), 0.4)), "h", {"sidelock"})
     bangs = where(ellipse(SX, 14, 13, 12), lambda x, y: y <= 10 or x <= 22)
     bangs += poly([(21, 9), (36.5, 9), (36.5, 13.5), (35, 16.5), (33.5, 12.5), (31.5, 16), (29.5, 12), (27, 16), (25, 12.5), (23, 16), (21, 13)])
     L.paint(hs(bangs), "H", "bangs")
@@ -448,8 +449,8 @@ def side_legs(step, outfit):
     return L.outline().rows()
 
 
-SEYE = [".KKKK", "KFFFK", "FWWFW", "EWWFW", "EFFFW", "EEFEW", ".EeE.", "..ee."]
-SCLOSED = [".....", ".....", ".....", ".....", ".....", "K...K", ".KKK.", "....."]
+SEYE = ["...KK", "..KFF", "WWFWF", "WWFWF", "WWEFF", ".WEEF", "...EW", "....e"]
+SCLOSED = ["....", "....", "....", "....", "....", "K..K", ".KK.", "...."]
 
 
 def side_face(pat):
@@ -461,7 +462,7 @@ def side_face(pat):
     for x, y in ((25, 24), (26, 24), (27, 24), (28, 24), (26, 25), (27, 25)):
         if g[y + OY][x] == ".":
             g[y + OY][x] = "p"
-    g[24 + OY][32] = "m"
+    g[26 + OY][31] = "m"
     return ["".join(r) for r in g]
 
 
