@@ -27,6 +27,10 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
+    static let circleTurns: CGFloat = 1.5
+    static let circleMinRadius: CGFloat = 30
+    static let circleMaxRadius: CGFloat = 400
+    static let circleDecay: CGFloat = 0.97
     static let ledgeMargin: CGFloat = 12
     static let jumpHeightRatio: CGFloat = 2.5
     static let jumpReach: CGFloat = 36
@@ -56,6 +60,8 @@ final class Mascot: NSObject, NSMenuDelegate {
     var petX: CGFloat?
     var petDirection: CGFloat = 0
     var petTurnTicks: [Int] = []
+    var circleAngle: CGFloat?
+    var circleTotal: CGFloat = 0
     var desktopWindows: [DesktopWindow] = []
     var sink: CGFloat = 0
     var appearance = Appearance()

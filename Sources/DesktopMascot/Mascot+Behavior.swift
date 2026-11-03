@@ -55,6 +55,43 @@ extension Mascot {
         return true
     }
 
+    func isCircling() -> Bool {
+        let m = NSEvent.mouseLocation
+        let f = window.frame
+        let center = NSPoint(x: f.midX, y: f.minY + CGFloat(character.height) * MascotView.scale / 2)
+        let dx = m.x - center.x, dy = m.y - center.y
+        let r = hypot(dx, dy)
+        guard r > Self.circleMinRadius, r < Self.circleMaxRadius, NSEvent.pressedMouseButtons == 0 else {
+            circleAngle = nil
+            circleTotal = 0
+            return false
+        }
+        let angle = atan2(dy, dx)
+        defer { circleAngle = angle }
+        guard let last = circleAngle else { return false }
+        var delta = angle - last
+        if delta > .pi { delta -= 2 * .pi } else if delta < -.pi { delta += 2 * .pi }
+        if delta * circleTotal < 0 { circleTotal = 0 }
+        circleTotal = (circleTotal + delta) * Self.circleDecay
+        guard abs(circleTotal) >= 2 * .pi * Self.circleTurns else { return false }
+        circleTotal = 0
+        return true
+    }
+
+    func dizzyIfCircled() {
+        switch state {
+        case .idle, .walking, .acting:
+            let circled = isCircling()
+            if case .acting(let a, _, _) = state, a.trigger == .circle { return }
+            if circled, let a = character.randomAction(.circle) {
+                start(a)
+            }
+        default:
+            circleAngle = nil
+            circleTotal = 0
+        }
+    }
+
     func ground(below top: CGFloat, cx: CGFloat? = nil) -> (y: CGFloat, span: ClosedRange<CGFloat>, window: DesktopWindow?) {
         let area = self.area
         let cx = cx ?? x + window.frame.width / 2
@@ -92,6 +129,7 @@ extension Mascot {
         snack?.step(floor: area.minY, gravity: Self.gravity)
         fallIfUnsupported()
         petIfStroked()
+        dizzyIfCircled()
 
         switch state {
         case .idle(let ticks): stepIdle(ticks)
