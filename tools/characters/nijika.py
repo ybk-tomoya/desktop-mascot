@@ -145,17 +145,17 @@ def front_legs(kind, outfit):
         L.paint(where(taper(knee, foot, 2.4, 2.1), lambda x, y: y >= foot[1] - (3 if outfit == "casual" else 6)), "L", "sock")
         shoe(L, foot)
     if kind == "stand":
-        leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (27.5, 57), (27.5, 64))
+        leg((20.5, 52), (20.5, 57), (20.5, 64)); leg((27.5, 52), (27.5, 57), (27.5, 64))
     elif kind == "together":
-        leg((20.5, 50), (20.9, 57), (21.2, 64)); leg((27.5, 50), (27.1, 57), (26.8, 64))
+        leg((20.5, 52), (20.9, 57), (21.2, 64)); leg((27.5, 52), (27.1, 57), (26.8, 64))
     elif kind == "kickLeft":
-        leg((20.5, 50), (16, 55), (15, 61)); leg((27.5, 50), (27.5, 57), (27.5, 64))
+        leg((20.5, 52), (16, 55), (15, 61)); leg((27.5, 52), (27.5, 57), (27.5, 64))
     elif kind == "kickRight":
-        leg((20.5, 50), (20.5, 57), (20.5, 64)); leg((27.5, 50), (32, 55), (33, 61))
+        leg((20.5, 52), (20.5, 57), (20.5, 64)); leg((27.5, 52), (32, 55), (33, 61))
     elif kind == "dangleLeft":
-        leg((20.5, 50), (19.5, 54), (19, 59)); leg((27.5, 50), (27.5, 55), (27.5, 62))
+        leg((20.5, 52), (19.5, 54), (19, 59)); leg((27.5, 52), (27.5, 55), (27.5, 62))
     elif kind == "dangleRight":
-        leg((20.5, 50), (20.5, 55), (20.5, 62)); leg((27.5, 50), (28.5, 54), (29, 59))
+        leg((20.5, 52), (20.5, 55), (20.5, 62)); leg((27.5, 52), (28.5, 54), (29, 59))
     elif kind == "sit":
         L.paint(rect(19, 62, 22, 63) + rect(26, 62, 29, 63), "L", "sock")
         shoe(L, (20.5, 64)); shoe(L, (27.5, 64))
@@ -245,12 +245,12 @@ def side_body(near_tail, outfit):
         L.paint(poly([(19, 29.5), (28, 29.5), (30, 32), (30, 44), (18, 44), (18, 32)]), "A", "tee")
         L.shade(rect(18, 33, 19, 44), "a", {"tee"})
     else:
-        L.paint(poly([(19, 29.5), (28, 29.5), (30, 32), (29, 41), (18, 41), (18, 32)]), "W", "shirt")
-        L.shade(rect(18, 33, 19, 41), "w", {"shirt"})
-        L.paint(poly([(18, 40), (29, 40), (32, 51), (15, 51)]), "D", "skirt")
+        L.paint(poly([(20, 29.5), (28, 29.5), (29, 32), (28.5, 41), (20, 41), (20, 32)]), "W", "shirt")
+        L.shade(rect(20, 33, 21, 41), "w", {"shirt"})
+        L.paint(poly([(19, 40), (28.5, 40), (31, 51), (17, 51)]), "D", "skirt")
         for x0 in (20, 23, 26):
             L.shade(line((x0 + 0.5, 42), (SX + (x0 + 0.5 - SX) * 1.5, 50), 0.5), "d", {"skirt"})
-        L.paint(poly([(27, 29), (32, 30), (31, 34), (27, 33)]) + poly([(28, 32), (31, 38), (27.5, 36)]), "R", "bow")
+        L.paint(poly([(26.5, 29), (30.5, 30), (29.5, 33.5), (26.5, 33)]) + poly([(27, 32), (29.5, 37), (26.5, 36)]), "R", "bow")
     L.paint(hs(poly([(22, 9), (30, 9), (33.5, 11.5), (35, 14), (35.5, 17), (35.5, 19.5), (36.5, 21), (35.6, 22), (35.6, 23.5),
                      (34.8, 25), (33.5, 27.5), (30, 29), (26, 29), (23, 27)])), "S", "face")
     for pts, shade in SIDELOCK:
@@ -285,16 +285,17 @@ def side_arm(swing, outfit):
 def side_legs(step, outfit):
     L = Layer()
     def leg(hip, knee, foot, far):
+        hip, knee, foot = ((x + 1, y) for x, y in (hip, knee, foot))
         L.paint(line(hip, knee, 2.0) + line(knee, foot, 1.8), "s" if far else "S", "farleg" if far else "leg")
         L.paint(where(line(knee, foot, 1.9), lambda x, y: y >= foot[1] - (2 if outfit == "casual" else 4)), "w" if far else "L", "farsock" if far else "sock")
         fx, fy = foot
         L.paint(poly([(fx - 2, fy - 1), (fx + 2, fy - 1), (fx + 4, fy + 1.5), (fx + 4, fy + 3), (fx - 2, fy + 3)]), "R", "farshoe" if far else "shoe")
     if step % 2 == 1:
-        leg((23, 49), (23, 56), (23, 63), True); leg((23, 49), (24, 56), (23, 63), False)
+        leg((23, 52), (23, 57), (23, 63), True); leg((23, 52), (23, 57), (23, 63), False)
     else:
         a, b = ((28, 64), (18, 64)) if step == 0 else ((18, 64), (28, 64))
-        leg((23, 50), ((23 + b[0]) / 2, 57), b, True)
-        leg((23, 50), ((23 + a[0]) / 2, 57), a, False)
+        leg((23, 52), ((23 + b[0]) / 2, 57), b, True)
+        leg((23, 52), ((23 + a[0]) / 2, 57), a, False)
     return L.outline().rows()
 
 

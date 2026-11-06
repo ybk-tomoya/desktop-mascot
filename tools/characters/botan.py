@@ -241,7 +241,7 @@ def slipper(L, ft):
 def front_legs(kind, outfit):
     L = Layer()
     close = kind == "together"
-    hy = 46 if outfit == "dress" else 50
+    hy = 50 if outfit == "dress" else 52
     tone, group = ("t", "tights") if outfit == "dress" else ("S", "leg")
 
     def wear(ft):
@@ -349,44 +349,44 @@ def hs(pts):
 
 def side_clothes(L, outfit):
     if outfit == "casual":
-        L.paint(poly([(17.5, 44), (29.5, 44), (31, 51), (16, 51)]), "N", "shorts")
-        L.shade(rect(15, 50, 32, 50), "n", {"shorts"})
-        L.paint(poly([(18.5, 29), (28.5, 29), (30.5, 32), (32.5, 45.5), (15.5, 45.5), (17.5, 32)]), "J", "hoodie")
-        L.shade(rect(15, 45, 33, 45), "j", {"hoodie"})
+        L.paint(poly([(19, 44), (28.5, 44), (29.5, 51), (18, 51)]), "N", "shorts")
+        L.shade(rect(17, 50, 30, 50), "n", {"shorts"})
+        L.paint(poly([(19.5, 29), (27.5, 29), (29, 32), (30.5, 45.5), (17.5, 45.5), (19, 32)]), "J", "hoodie")
+        L.shade(rect(17, 45, 31, 45), "j", {"hoodie"})
         L.paint(poly([(15, 27), (23, 26.5), (23, 31), (17, 32)]), "j", "hood")
-        L.paint(poly([(18, 40), (29, 40), (31, 45), (16.5, 45)]), "j", "pocket")
+        L.paint(poly([(19.5, 40), (28, 40), (29.5, 45), (18, 45)]), "j", "pocket")
         L.paint(rect(21, 25, 25, 28) + rect(24, 28, 27, 30), "S", "throat")
         L.shade(rect(23, 28, 26, 28), "s", {"throat"})
     elif outfit == "cami":
-        L.paint(poly([(17.5, 44), (29.5, 44), (31, 50), (16, 50)]), "W", "shorts")
-        L.shade(rect(15, 49, 32, 49), "a", {"shorts"})
-        L.paint(poly([(19, 29), (28, 29), (30, 32), (32, 46.5), (16, 46.5), (18, 32)]), "W", "pajama")
-        L.shade(line((22, 34), (20, 45), 0.5) + line((28, 34), (30, 45), 0.5) + rect(16, 46, 32, 46), "a", {"pajama"})
+        L.paint(poly([(19, 44), (28.5, 44), (29.5, 50), (18, 50)]), "W", "shorts")
+        L.shade(rect(17, 49, 30, 49), "a", {"shorts"})
+        L.paint(poly([(20, 29), (27, 29), (28.5, 32), (30, 46.5), (18, 46.5), (19.5, 32)]), "W", "pajama")
+        L.shade(line((22.5, 34), (21, 45), 0.5) + line((27, 34), (28.5, 45), 0.5) + rect(18, 46, 30, 46), "a", {"pajama"})
         L.paint(rect(21, 25, 25, 28) + rect(24, 28, 27, 30), "S", "throat")
         L.shade(rect(23, 28, 26, 28), "s", {"throat"})
         L.paint(poly([(21.5, 27.5), (24.5, 29.5), (21.5, 31.5)]), "W", "strap")
     elif outfit == "cardigan":
-        L.paint(poly([(17.5, 44), (29.5, 44), (31, 51), (16, 51)]), "b", "shorts")
-        L.paint(poly([(19, 29), (28, 29), (30, 32), (31.5, 46), (16.5, 46), (18, 32)]), "W", "pajama")
+        L.paint(poly([(19, 44), (28.5, 44), (29.5, 51), (18, 51)]), "b", "shorts")
+        L.paint(poly([(20, 29), (27, 29), (28.5, 32), (30, 46), (18, 46), (19.5, 32)]), "W", "pajama")
         L.paint(rect(21, 25, 25, 28) + rect(24, 28, 27, 30), "S", "throat")
         L.shade(rect(23, 28, 26, 28), "s", {"throat"})
         L.paint(rect(24, 28, 27, 29), "b", "collar")
-        L.paint(poly([(16.5, 29), (26.5, 29), (28, 32), (29.5, 47), (14.5, 47), (15.5, 33)]), "C", "cardigan")
-        L.shade(line((27, 31), (28.5, 46), 0.4) + rect(15, 46, 29, 46), "c", {"cardigan"})
+        L.paint(poly([(18, 29), (26, 29), (27, 32), (28.5, 47), (16.5, 47), (17.5, 33)]), "C", "cardigan")
+        L.shade(line((26.5, 31), (27.5, 46), 0.4) + rect(17, 46, 28, 46), "c", {"cardigan"})
     elif outfit == "dress":
-        L.paint(poly([(19, 29), (28, 29), (30, 32), (31.5, 45.5), (16.5, 45.5), (18, 32)]), "b", "turtle")
-        L.paint(poly([(18.5, 31), (28.5, 31), (30, 36), (32, 47.5), (15.5, 47.5), (17, 36)]), "D", "dress")
-        L.shade(rect(15, 47, 32, 47), "d", {"dress"})
-        L.paint(rect(17, 38, 31, 40), "d", "sash")
-        L.paint(rect(23, 25, 27, 29), "b", "turtle")
-        L.paint(poly([(16.5, 29), (26, 29), (27.5, 32), (29.5, 49), (14.5, 49), (15.5, 33)]), "V", "cardigan")
-        L.shade(line((26, 31), (28, 48), 0.4) + rect(15, 48, 29, 48), "v", {"cardigan"})
+        L.paint(poly([(20, 29), (27, 29), (28.5, 32), (30, 45.5), (18, 45.5), (19.5, 32)]), "b", "turtle")
+        L.paint(poly([(19.5, 31), (27.5, 31), (28.5, 36), (30, 47.5), (17.5, 47.5), (18.5, 36)]), "D", "dress")
+        L.shade(rect(17, 47, 30, 47), "d", {"dress"})
+        L.paint(rect(19, 38, 29, 40), "d", "sash")
+        L.paint(rect(23, 25, 26, 29), "b", "turtle")
+        L.paint(poly([(18, 29), (25.5, 29), (26.5, 32), (28.5, 49), (16.5, 49), (17.5, 33)]), "V", "cardigan")
+        L.shade(line((25.5, 31), (27, 48), 0.4) + rect(17, 48, 28, 48), "v", {"cardigan"})
     else:
-        L.paint(poly([(17.5, 44), (29.5, 44), (31, 51), (16, 51)]), "Q", "shorts")
-        L.shade(rect(15, 50, 32, 50), "M", {"shorts"})
-        L.paint(poly([(19, 29), (28, 29), (30, 32), (31.5, 45.5), (16.5, 45.5), (18, 32)]), "Q", "pajama")
-        L.shade(rect(15, 45, 33, 45), "M", {"pajama"})
-        L.shade(line((22, 35), (21, 44), 0.5) + line((27.5, 35), (29, 44), 0.5), "q", {"pajama"})
+        L.paint(poly([(19, 44), (28.5, 44), (29.5, 51), (18, 51)]), "Q", "shorts")
+        L.shade(rect(17, 50, 30, 50), "M", {"shorts"})
+        L.paint(poly([(20, 29), (27, 29), (28.5, 32), (30, 45.5), (18, 45.5), (19.5, 32)]), "Q", "pajama")
+        L.shade(rect(17, 45, 31, 45), "M", {"pajama"})
+        L.shade(line((22.5, 35), (21.5, 44), 0.5) + line((26.5, 35), (28, 44), 0.5), "q", {"pajama"})
         L.paint(rect(21, 25, 25, 28) + rect(24, 28, 27, 30), "S", "throat")
         L.shade(rect(23, 28, 26, 28), "s", {"throat"})
         L.paint(where(rect(23, 28, 28, 31), lambda x, y: x == 28 or y == 31), "Z", "frill")
@@ -424,6 +424,7 @@ def side_legs(step, outfit):
     dress = outfit == "dress"
 
     def leg(hip, knee, foot, far):
+        hip, knee, foot = ((x + 1, y) for x, y in (hip, knee, foot))
         pts = taper(hip, knee, 2.3, 2.0) + taper(knee, foot, 2.0, 1.7)
         fx, fy = foot
         shoe = poly([(fx - 1.5, fy - 1.5), (fx + 1, fy - 1.5), (fx + 4, fy + 1.5), (fx + 4, fy + 3), (fx - 2, fy + 3)])
@@ -440,13 +441,13 @@ def side_legs(step, outfit):
             L.paint(shoe, "I", "slipper")
         else:
             L.paint(shoe, "s" if far else "S", "farfoot" if far else "foot")
-    hy = 46 if dress else 49
+    hy = 50 if dress else 51 if outfit == "cami" else 52
     if step % 2 == 1:
-        leg((23, hy), (23, 56), (23, 63), True); leg((23, hy), (24, 56), (23, 63), False)
+        leg((23, hy), (23, 56), (23, 63), True); leg((23, hy), (23, 56), (23, 63), False)
     else:
         a, b = ((28, 64), (18, 64)) if step == 0 else ((18, 64), (28, 64))
-        leg((23, hy + 1), ((23 + b[0]) / 2, 57), b, True)
-        leg((23, hy + 1), ((23 + a[0]) / 2, 57), a, False)
+        leg((23, hy), ((23 + b[0]) / 2, 57), b, True)
+        leg((23, hy), ((23 + a[0]) / 2, 57), a, False)
     return L.outline().rows()
 
 
