@@ -288,6 +288,7 @@ EYE = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WEEFEEW", ".EeeWE
 CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KKKKK.", "......."]
 HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
 LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
+LOOK_UP = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WWEEEWW", ".WWWWW.", "..KKK.."]
 LOOK_DOWN = [".......", ".KKKKK.", "KWWWWWK", "WFFWFFW", "WEFFFEW", "WEEFEEW", ".EeeEE.", "..eee.."]
 LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
 SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
@@ -333,6 +334,7 @@ def front_faces():
         "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
         "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
         "lookDown": face_layer(LOOK_DOWN, LOOK_DOWN),
+        "lookUp": face_layer(LOOK_UP, LOOK_UP),
     }
 
 
@@ -525,6 +527,15 @@ ACTIONS = [
      "frames": [{"face": "dizzy", "legs": "together"}],
      "lift": {"type": "hop", "height": 2, "period": 20},
      "effect": {"glyph": "dizzy", "period": 8, "dx": [-14, 0, 14, 0]}},
+    {"name": "cheer", "trigger": "idle", "weight": 3, "duration": (40, 40),
+     "frames": [{"face": "happy", "arms": "bothUp", "legs": "together"}],
+     "lift": {"type": "hop", "height": 10, "period": 10}},
+    {"name": "stareSky", "trigger": "idle", "weight": 2, "duration": (68, 136),
+     "frames": [{"face": "lookUp", "ticks": 30}, {"face": "blink", "ticks": 4}, {"face": "lookUp", "ticks": 30}, {"face": "blink", "ticks": 4}],
+     "effect": {"glyph": "cloud", "period": 50, "dx": [14]}},
+    {"name": "petLove", "trigger": "pet", "duration": (50, 50),
+     "frames": [{"face": "happy"}],
+     "effect": {"glyph": "heart", "period": 10, "dx": [-14, 0, 14, -7, 7]}},
     {"name": "sleep", "trigger": "idle", "weight": 1, "duration": (200, 400),
      "frames": [{"face": "blink", "legs": "sit"}],
      "effect": {"glyph": "zzz", "period": 40, "dx": [16]}},

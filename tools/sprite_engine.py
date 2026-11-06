@@ -38,6 +38,7 @@ GLYPHS = {
     "question": [".KKK.", "KK.KK", "...KK", "..KK.", "..K..", ".....", "..K.."],
     "exclaim": ["KK", "KK", "KK", "KK", "..", "KK"],
     "dizzy": ["..D..", ".DWD.", "DWWWD", ".DWD.", "..D.."],
+    "cloud": ["..KKK.KK...", ".KWWWKWWK..", "KWWWWWWWWKK", "KWWWWWWWWWK", ".KKKKKKKKK."],
     "sneeze": ["K..K..K", ".K.K.K.", "..KKK..", "KKK.KKK", "..KKK..", ".K.K.K.", "K..K..K"],
 }
 
