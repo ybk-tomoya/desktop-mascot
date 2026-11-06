@@ -27,10 +27,10 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
-    static let circleTurns: CGFloat = 1.5
+    static let circleTurns: CGFloat = 3
     static let circleMinRadius: CGFloat = 30
     static let circleMaxRadius: CGFloat = 400
-    static let circleDecay: CGFloat = 0.97
+    static let circleDecay: CGFloat = 0.985
     static let ledgeMargin: CGFloat = 12
     static let jumpHeightRatio: CGFloat = 2.5
     static let jumpReach: CGFloat = 36
