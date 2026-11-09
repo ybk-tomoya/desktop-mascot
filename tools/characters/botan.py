@@ -493,7 +493,7 @@ def build(outfit):
     }
 
 
-SIT_FACES = ["normal"] * 5 + ["blink", "normal", "lookLeft", "lookRight"] + ["normal"] * 2 + ["happy"] * 6 + ["normal"] * 3 + ["blink"] + ["happy"] * 3
+SIT_FACES = ["normal"] * 24 + ["blink"] + ["normal"] * 6 + ["lookLeft"] * 3 + ["lookRight"] * 3 + ["normal"] * 12 + ["happy"] * 30 + ["normal"] * 14 + ["blink"] + ["normal"] * 8 + ["happy"] * 20
 
 ACTIONS = [
     {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},

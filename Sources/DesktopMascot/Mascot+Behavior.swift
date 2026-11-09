@@ -209,7 +209,11 @@ extension Mascot {
             state = .fetching
         } else if ticks <= 0 {
             let onWindow = ground(below: y).window != nil
-            start(onWindow && Int.random(in: 0..<3) == 0 ? character.randomAction(.top) : character.randomAction(.idle, app: appBehind()))
+            if onWindow && sitForever, let sit = character.action(named: "sitTop") {
+                start(sit)
+            } else {
+                start(onWindow && Int.random(in: 0..<3) == 0 ? character.randomAction(.top) : character.randomAction(.idle, app: appBehind()))
+            }
         } else {
             state = .idle(ticks: ticks - 1)
         }
@@ -252,7 +256,9 @@ extension Mascot {
 
     func stepActing(_ a: MascotAction, t: Int, length: Int) {
         perform(a, t: t, length: length)
-        if t + 1 >= length {
+        if t + 1 >= length && a.name == "sitTop" && sitForever {
+            state = .acting(a, t: t + 1, length: t + 2)
+        } else if t + 1 >= length {
             finish(a)
         } else {
             state = .acting(a, t: t + 1, length: length)

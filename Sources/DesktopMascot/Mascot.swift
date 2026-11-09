@@ -24,6 +24,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let characterKey = "character"
     static let outfitKeyPrefix = "outfit."
     static let wornKeyPrefix = "worn."
+    static let sitKey = "sitForever"
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
@@ -53,6 +54,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     let accessoryItem = NSMenuItem(title: "小物", action: nil, keyEquivalent: "")
     let accessoryMenu = NSMenu()
     let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
+    let sitItem = NSMenuItem(title: "ウィンドウの上でずっと座る", action: #selector(toggleSitForever), keyEquivalent: "")
     let loginItem = NSMenuItem(title: "ログイン時に起動", action: #selector(toggleLogin), keyEquivalent: "")
     var snack: Snack?
     var dragDelta = CGVector.zero
@@ -110,6 +112,8 @@ final class Mascot: NSObject, NSMenuDelegate {
         menu.autoenablesItems = false
         snackItem.isEnabled = character.snack != nil
         refreshWardrobe()
+        sitItem.target = self
+        menu.addItem(sitItem)
         loginItem.target = self
         menu.addItem(loginItem)
         menu.delegate = self
@@ -164,7 +168,14 @@ final class Mascot: NSObject, NSMenuDelegate {
     }
 
     func menuNeedsUpdate(_ menu: NSMenu) {
+        sitItem.state = sitForever ? .on : .off
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
+    }
+
+    var sitForever: Bool { UserDefaults.standard.bool(forKey: Self.sitKey) }
+
+    @objc func toggleSitForever() {
+        UserDefaults.standard.set(!sitForever, forKey: Self.sitKey)
     }
 
     @objc func toggleLogin() {
