@@ -65,6 +65,9 @@ final class Mascot: NSObject, NSMenuDelegate {
     var circleAngle: CGFloat?
     var circleTotal: CGFloat = 0
     var desktopWindows: [DesktopWindow] = []
+    var standingOn: Int?
+    var manualSit = false
+    var reaction: (action: MascotAction, t: Int, length: Int)?
     var sink: CGFloat = 0
     var appearance = Appearance()
     var overMascot = false
@@ -122,6 +125,8 @@ final class Mascot: NSObject, NSMenuDelegate {
         statusItem.menu = menu
 
         view.onHide = { [weak self] in self?.setVisible(false) }
+        view.onSit = { [weak self] in self?.toggleSit() }
+        view.isSitting = { [weak self] in self?.manualSit ?? false }
         view.onClick = { [weak self] in
             guard let self, let a = character.randomAction(.click) else { return }
             start(a)
@@ -145,7 +150,9 @@ final class Mascot: NSObject, NSMenuDelegate {
                 screen = s
             }
             let strength = hypot(dragVelocity.dx, dragVelocity.dy)
-            if strength > Self.throwSpeed {
+            if manualSit, let sit = sitAgain() {
+                start(sit)
+            } else if strength > Self.throwSpeed {
                 state = .thrown(character.randomAction(.throw, strength: strength), vx: dragVelocity.dx, vy: dragVelocity.dy, t: 0, strength: strength)
             } else {
                 fall()

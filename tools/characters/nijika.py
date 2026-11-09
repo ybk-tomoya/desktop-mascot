@@ -341,8 +341,6 @@ def build(outfit):
     }
 
 
-SIT_FACES = ["normal"] * 24 + ["blink"] + ["normal"] * 6 + ["lookLeft"] * 3 + ["lookRight"] * 3 + ["normal"] * 12 + ["happy"] * 30 + ["normal"] * 14 + ["blink"] + ["normal"] * 8 + ["happy"] * 20
-
 ACTIONS = [
     {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},
     {"name": "drum", "trigger": "idle", "weight": 3, "duration": (60, 140),
@@ -436,9 +434,22 @@ ACTIONS = [
     {"name": "ledgeSit", "trigger": "ledge", "weight": 2, "duration": (100, 200),
      "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
      "lift": {"type": "sink", "height": 36}},
-    {"name": "sitTop", "trigger": "top", "duration": (1000, 1400),
-     "frames": [{"face": f, "legs": ("dangleLeft", "dangleRight")[i % 2], "ticks": 8} for i, f in enumerate(SIT_FACES)],
-     "lift": {"type": "sink", "height": 36}},
+    {"name": "sitTop", "trigger": "top", "duration": (60, 200),
+     "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
+     "lift": {"type": "sink", "height": 36},
+     "next": {"sitTopSmile": 0.3, "sitTopLook": 0.22, "sitTopBlink": 0.27, "sitTop": 0.75}},
+    {"name": "sitTopSmile", "trigger": "chained", "duration": (70, 90),
+     "frames": [{"face": "happy", "legs": "dangleLeft", "ticks": 8}, {"face": "happy", "legs": "dangleRight", "ticks": 8}],
+     "lift": {"type": "sink", "height": 36},
+     "next": {"sitTop": 1}},
+    {"name": "sitTopLook", "trigger": "chained", "duration": (20, 20),
+     "frames": [{"face": "lookLeft", "legs": "dangleLeft", "ticks": 10}, {"face": "lookRight", "legs": "dangleRight", "ticks": 10}],
+     "lift": {"type": "sink", "height": 36},
+     "next": {"sitTop": 1}},
+    {"name": "sitTopBlink", "trigger": "chained", "duration": (8, 8),
+     "frames": [{"face": "blink", "legs": "dangleLeft"}],
+     "lift": {"type": "sink", "height": 36},
+     "next": {"sitTop": 1}},
     {"name": "hang", "trigger": "ledge", "weight": 1, "duration": (80, 160),
      "frames": [{"face": "panic", "arms": "grab", "legs": "dangleLeft", "ticks": 6}, {"face": "panic", "arms": "grab", "legs": "dangleRight", "ticks": 6}],
      "lift": {"type": "sink", "height": 124}},

@@ -14,6 +14,8 @@ final class MascotView: NSView {
     var onDrag: ((CGFloat, CGFloat) -> Void)?
     var onDrop: (() -> Void)?
     var onHide: (() -> Void)?
+    var onSit: (() -> Void)?
+    var isSitting: (() -> Bool)?
     private var dragOrigin: NSPoint?
     private var dragged = false
 
@@ -118,9 +120,14 @@ final class MascotView: NSView {
 
     override func rightMouseDown(with event: NSEvent) {
         let menu = NSMenu()
+        menu.addItem(withTitle: isSitting?() == true ? "立ち上がる" : "座る", action: #selector(sit), keyEquivalent: "").target = self
         menu.addItem(withTitle: "隠す", action: #selector(hide), keyEquivalent: "").target = self
         menu.addItem(withTitle: "終了", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
         NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    @objc func sit() {
+        onSit?()
     }
 
     @objc func hide() {

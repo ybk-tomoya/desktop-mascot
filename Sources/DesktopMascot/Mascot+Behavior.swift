@@ -14,6 +14,10 @@ extension Mascot {
             state = .idle(ticks: Int.random(in: Self.restRange))
             return
         }
+        if manualSit && !a.name.hasPrefix("sit") {
+            reaction = (a, 0, a.randomLength())
+            return
+        }
         if a.walk {
             direction = Bool.random() ? 1 : -1
             state = .walking(ticks: a.randomLength())
@@ -22,7 +26,39 @@ extension Mascot {
         }
     }
 
+    var onWindow: Bool {
+        standingOn != nil || ground(below: y).window != nil
+    }
+
+    func sitAgain() -> MascotAction? {
+        if manualSit {
+            return character.action(named: "sitTop")
+        }
+        return sitForever && onWindow ? character.action(named: "sitTop") : nil
+    }
+
+    func toggleSit() {
+        if manualSit {
+            manualSit = false
+            reaction = nil
+            state = .idle(ticks: Int.random(in: Self.restRange))
+            return
+        }
+        switch state {
+        case .idle, .walking, .acting, .falling, .thrown:
+            guard let a = character.action(named: "sitTop") else { return }
+            start(a)
+            manualSit = true
+        default:
+            break
+        }
+    }
+
     func finish(_ a: MascotAction) {
+        if manualSit || a.name.hasPrefix("sit"), let sit = sitAgain() {
+            start(sit)
+            return
+        }
         for (name, chance) in a.next where Double.random(in: 0..<1) < chance {
             if let n = character.action(named: name) {
                 start(n)
@@ -111,6 +147,7 @@ extension Mascot {
     }
 
     func fall() {
+        manualSit = false
         state = .falling(character.randomAction(.fall), velocity: 0, t: 0)
     }
 
@@ -122,12 +159,15 @@ extension Mascot {
         view.effect = nil
         view.cutoff = nil
         sink = 0
-        if tick % 10 == 0 {
+        if tick % (standingOn == nil ? 10 : 3) == 0 {
             desktopWindows = Desktop.windows()
+            followStandingWindow()
         }
 
         snack?.step(floor: area.minY, gravity: Self.gravity)
-        fallIfUnsupported()
+        if standingOn == nil && !manualSit {
+            fallIfUnsupported()
+        }
         petIfStroked()
         dizzyIfCircled()
 
@@ -142,8 +182,31 @@ extension Mascot {
         case .jumping(let a, let from, let to, let t, let length): stepJumping(a, from: from, to: to, t: t, length: length)
         }
 
+        trackStandingWindow()
         render()
         updateCursor()
+    }
+
+    func trackStandingWindow() {
+        switch state {
+        case .idle, .walking, .acting:
+            let g = ground(below: y)
+            if let w = g.window, abs(y - g.y) < 0.5 {
+                standingOn = w.id
+            }
+        default:
+            standingOn = nil
+        }
+    }
+
+    func followStandingWindow() {
+        guard let id = standingOn else { return }
+        let cx = x + window.frame.width / 2
+        guard let f = desktopWindows.first(where: { $0.id == id })?.frame, f.minX < cx, cx < f.maxX else {
+            standingOn = nil
+            return
+        }
+        y = min(f.maxY, area.maxY - window.frame.height)
     }
 
     func updateCursor() {
@@ -173,6 +236,10 @@ extension Mascot {
         if case .cling = a.lift {
             view.cutoff = view.bounds.height + sink
         }
+        showEffect(a, t: t, length: length)
+    }
+
+    func showEffect(_ a: MascotAction, t: Int, length: Int) {
         if let e = a.effect, let glyph = character.glyphs[e.glyph], let (progress, dx) = e.state(t: t, length: length) {
             view.effect = (glyph, progress, dx)
         }
@@ -218,6 +285,10 @@ extension Mascot {
             state = .idle(ticks: ticks - 1)
         }
         appearance.breath = (60..<84).contains(tick % 100) ? 1 : 0
+        lookAtMouse()
+    }
+
+    func lookAtMouse() {
         let m = NSEvent.mouseLocation
         let dx = m.x - window.frame.midX
         if appearance.face == "normal" && abs(dx) > 30 && hypot(dx, m.y - window.frame.midY) < Self.lookDistance {
@@ -256,9 +327,16 @@ extension Mascot {
 
     func stepActing(_ a: MascotAction, t: Int, length: Int) {
         perform(a, t: t, length: length)
-        if t + 1 >= length && a.name == "sitTop" && sitForever {
-            state = .acting(a, t: t + 1, length: t + 2)
-        } else if t + 1 >= length {
+        if let (r, rt, rLength) = reaction {
+            if !r.frames.isEmpty {
+                appearance.face = r.pose(at: rt).face ?? appearance.face
+            }
+            showEffect(r, t: rt, length: rLength)
+            reaction = rt + 1 >= rLength ? nil : (r, rt + 1, rLength)
+        } else if a.name.hasPrefix("sit") {
+            lookAtMouse()
+        }
+        if t + 1 >= length {
             finish(a)
         } else {
             state = .acting(a, t: t + 1, length: length)
