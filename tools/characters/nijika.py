@@ -174,7 +174,7 @@ DIZZY = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K..K.", ".K.KK..", "..K.
 GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
 
 
-def face_layer(left, right, mouth="normal", blush_color="p", eye_y=16, lx=15, rx=26, blush=((14, 24), (31, 24))):
+def face_layer(left, right, mouth="normal", blush_color="p", eye_y=16, lx=15, rx=26, blush=((14, 24), (30, 24))):
     g = [["."] * W for _ in range(H)]
     for pat, x0 in ((left, lx), (right, rx)):
         for dy, r in enumerate(pat):
@@ -341,6 +341,8 @@ def build(outfit):
     }
 
 
+SIT_FACES = ["normal"] * 5 + ["blink", "normal", "lookLeft", "lookRight"] + ["normal"] * 2 + ["happy"] * 6 + ["normal"] * 3 + ["blink"] + ["happy"] * 3
+
 ACTIONS = [
     {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},
     {"name": "drum", "trigger": "idle", "weight": 3, "duration": (60, 140),
@@ -434,8 +436,8 @@ ACTIONS = [
     {"name": "ledgeSit", "trigger": "ledge", "weight": 2, "duration": (100, 200),
      "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
      "lift": {"type": "sink", "height": 36}},
-    {"name": "sitTop", "trigger": "top", "duration": (100, 200),
-     "frames": [{"face": "happy", "legs": "dangleLeft", "ticks": 8}, {"face": "happy", "legs": "dangleRight", "ticks": 8}],
+    {"name": "sitTop", "trigger": "top", "duration": (1000, 1400),
+     "frames": [{"face": f, "legs": ("dangleLeft", "dangleRight")[i % 2], "ticks": 8} for i, f in enumerate(SIT_FACES)],
      "lift": {"type": "sink", "height": 36}},
     {"name": "hang", "trigger": "ledge", "weight": 1, "duration": (80, 160),
      "frames": [{"face": "panic", "arms": "grab", "legs": "dangleLeft", "ticks": 6}, {"face": "panic", "arms": "grab", "legs": "dangleRight", "ticks": 6}],
