@@ -11,7 +11,7 @@ struct Appearance {
 extension Mascot {
     func start(_ a: MascotAction?) {
         guard let a else {
-            state = .idle(ticks: Int.random(in: Self.restRange))
+            rest()
             return
         }
         if manualSit && !a.name.hasPrefix("sit") {
@@ -24,6 +24,10 @@ extension Mascot {
         } else {
             state = .acting(a, t: 0, length: a.randomLength())
         }
+    }
+
+    func rest() {
+        state = .idle(ticks: Int.random(in: Self.restRange))
     }
 
     var onWindow: Bool {
@@ -41,7 +45,7 @@ extension Mascot {
         if manualSit {
             manualSit = false
             reaction = nil
-            state = .idle(ticks: Int.random(in: Self.restRange))
+            rest()
             return
         }
         switch state {
@@ -65,7 +69,7 @@ extension Mascot {
                 return
             }
         }
-        state = .idle(ticks: Int.random(in: Self.restRange))
+        rest()
     }
 
     func isPetting() -> Bool {
@@ -416,7 +420,7 @@ extension Mascot {
             if let a {
                 finish(a)
             } else {
-                state = .idle(ticks: Int.random(in: Self.restRange))
+                rest()
             }
         } else {
             state = .jumping(a, from: from, to: to, t: t + 1, length: length)
@@ -425,7 +429,7 @@ extension Mascot {
 
     func stepFetching() {
         guard let s = snack else {
-            state = .idle(ticks: Int.random(in: Self.restRange))
+            rest()
             return
         }
         let target = s.midX - window.frame.width / 2
@@ -446,7 +450,7 @@ extension Mascot {
         y -= v
         if y <= floor {
             y = floor
-            state = .idle(ticks: Int.random(in: Self.restRange))
+            rest()
         } else {
             state = .falling(a, velocity: v + Self.gravity, t: t + 1)
         }
