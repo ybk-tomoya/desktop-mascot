@@ -58,11 +58,8 @@ final class Mascot: NSObject, NSMenuDelegate {
     var snack: Snack?
     var dragDelta = CGVector.zero
     var dragVelocity = CGVector.zero
-    var petX: CGFloat?
-    var petDirection: CGFloat = 0
-    var petTurnTicks: [Int] = []
-    var circleAngle: CGFloat?
-    var circleTotal: CGFloat = 0
+    var pet = PetDetector()
+    var circle = CircleDetector()
     var desktopWindows: [DesktopWindow] = []
     var standingOn: Int?
     var manualSit = false
@@ -71,10 +68,7 @@ final class Mascot: NSObject, NSMenuDelegate {
     var appearance = Appearance()
     var overMascot = false
     var glide: (from: NSPoint, to: NSPoint, start: TimeInterval)?
-    var frameCache: [String: [String]] = [:]
-    var lastFrameKey = ""
-    var lastLift: CGFloat = 0
-    var lastCutoff: CGFloat?
+    var frames = FrameCache()
 
     override init() {
         character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))
@@ -161,6 +155,7 @@ final class Mascot: NSObject, NSMenuDelegate {
             let area = screen.visibleFrame
             x = area.midX - window.frame.width / 2
             y = area.maxY - window.frame.height
+            stopSitting()
             fall()
         }
         updatePosition()

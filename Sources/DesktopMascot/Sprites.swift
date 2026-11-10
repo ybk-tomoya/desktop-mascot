@@ -84,6 +84,7 @@ struct MascotAction {
     let trigger: Trigger
     let weight: Int
     let walk: Bool
+    let sit: Bool
     let duration: ClosedRange<Int>?
     let strength: ClosedRange<CGFloat>?
     let apps: [String]?
@@ -144,6 +145,10 @@ struct MascotCharacter {
         let side = facingLeft ? outfit.left : outfit.right
         let upper = Sprites.overlay([side.body, side.arms[step], blink ? side.blink : side.face] + wornAccessories.map { facingLeft ? $0.left : $0.right })
         return Sprites.overlay([side.legs[step], step % 2 == 1 ? Sprites.raised(upper, by: 1) : upper])
+    }
+
+    var sitAction: MascotAction? {
+        actions.first { $0.sit && $0.trigger == .top }
     }
 
     func action(named name: String) -> MascotAction? {

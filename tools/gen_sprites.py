@@ -74,6 +74,8 @@ def check(mod, data, outfit):
             fail(f"unknown accessory '{id}'")
     if not any(a["trigger"] == "idle" for a in mod.ACTIONS):
         fail("needs at least one idle action")
+    if any(a.get("sit") for a in mod.ACTIONS) and not any(a.get("sit") and a["trigger"] == "top" for a in mod.ACTIONS):
+        fail("sit actions need one with trigger 'top'")
     glyph_palette = {**engine.GLYPH_PALETTE, **getattr(mod, "GLYPH_PALETTE", {})}
     for name, rows in [*glyphs.items(), *([("SNACK", mod.SNACK["glyph"])] if hasattr(mod, "SNACK") else [])]:
         missing = {c for r in rows for c in r} - {"."} - set(glyph_palette)
@@ -128,7 +130,7 @@ def action(a):
     apps = s(a["apps"]) if "apps" in a else "nil"
     nxt = "[" + ", ".join(f"({s(k)}, {v})" for k, v in a.get("next", {}).items()) + "]" if a.get("next") else "[]"
     return (f"        MascotAction(name: {s(a['name'])}, trigger: .{a['trigger']}, weight: {a.get('weight', 1)}, "
-            f"walk: {str(a.get('walk', False)).lower()}, duration: {duration}, strength: {strength}, apps: {apps},\n"
+            f"walk: {str(a.get('walk', False)).lower()}, sit: {str(a.get('sit', False)).lower()}, duration: {duration}, strength: {strength}, apps: {apps},\n"
             f"                     frames: [{frames}],\n"
             f"                     lift: {lift}, effect: {effect}, next: {nxt}),\n")
 

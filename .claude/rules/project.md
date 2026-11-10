@@ -8,7 +8,11 @@ macOS のデスクトップマスコットアプリ（Swift / AppKit、Xcode プ
 - `Sources/DesktopMascot/main.swift`: 起動処理だけ
 - `Sources/DesktopMascot/Mascot.swift`: ウィンドウの作成・マウス入力の受け口・タイマーと、状態を持つ変数（extension には保存プロパティを置けないのでここに残す）
 - `Sources/DesktopMascot/Mascot+Menu.swift`: メニューバーのメニュー・キャラ切り替え・衣装と小物・おやつ
-- `Sources/DesktopMascot/Mascot+Behavior.swift`: 状態遷移（歩く・まばたき・視線・ドラッグ・重力・ウィンドウへのジャンプ移動だけが組み込み。他のアクションはキャラ設定を再生する）。`step()` は状態ごとの `stepXxx` を呼ぶだけ
+- `Sources/DesktopMascot/Mascot+Sitting.swift`: 座る動き（右クリックの「座る」・ずっと座る・座っている間の反応と視線）
+- `Sources/DesktopMascot/Mascot+Behavior.swift`: 状態遷移の中心。`step()` は状態ごとの `stepXxx` を呼ぶだけで、`start`/`finish` がアクションの開始と終わりを決める。歩く・まばたき・視線・ドラッグ・重力・ウィンドウへのジャンプ移動だけが組み込みで、他のアクションはキャラ設定を再生する
+- `Sources/DesktopMascot/Mascot+Movement.swift`: 足場の判定（`ground`）と、歩く・ドラッグ・投げ・落下・ジャンプ・おやつへ向かう動き、乗っているウィンドウへの追従
+- `Sources/DesktopMascot/Mascot+Input.swift`: マウスの検出（なでる・ぐるぐる回す・視線・カーソル）
+- `Sources/DesktopMascot/Mascot+Render.swift`: ポーズの適用と描画（フレームのキャッシュ）
 - `Sources/DesktopMascot/MascotView.swift`: 描画とマウス入力
 - `Sources/DesktopMascot/Desktop.swift`: 画面上の他アプリのウィンドウ一覧
 - `Sources/DesktopMascot/Sprites.swift`: `MascotCharacter` / `MascotAction` などのデータ型とレイヤー合成
