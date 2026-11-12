@@ -77,7 +77,7 @@ struct MascotSnack {
 
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, near, jump, circle, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, near, jump, circle, talk, listen, chained
     }
 
     let name: String
@@ -94,6 +94,7 @@ struct MascotAction {
     let next: [(String, Double)]
 
     var cycle: Int { frames.reduce(0) { $0 + $1.ticks } }
+    var isChat: Bool { trigger == .talk || trigger == .listen }
 
     func randomLength() -> Int {
         duration.map { Int.random(in: $0) } ?? cycle

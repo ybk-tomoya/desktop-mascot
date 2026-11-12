@@ -5,7 +5,7 @@ YR = range(0)
 
 WALK_STEPS = 4
 REQUIRED = {"faces": ("normal", "blink"), "arms": ("down",), "legs": ("stand",)}
-TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "ledge", "wall", "top", "near", "jump", "circle", "chained")
+TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "ledge", "wall", "top", "near", "jump", "circle", "talk", "listen", "chained")
 LIFTS = ("jump", "hop", "rise", "sink", "cling")
 
 TERMINAL_APPS = ["com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "com.github.wez.wezterm", "org.alacritty",
@@ -39,6 +39,7 @@ GLYPHS = {
     "exclaim": ["KK", "KK", "KK", "KK", "..", "KK"],
     "dizzy": ["..D..", ".DWD.", "DWWWD", ".DWD.", "..D.."],
     "cloud": ["..KKK.KK...", ".KWWWKWWK..", "KWWWWWWWWKK", "KWWWWWWWWWK", ".KKKKKKKKK."],
+    "talk": [".KKKKKKKKK.", "KWWWWWWWWWK", "KWKWWKWWKWK", "KWWWWWWWWWK", ".KWKKKKKKK.", ".KK........"],
     "sneeze": ["K..K..K", ".K.K.K.", "..KKK..", "KKK.KKK", "..KKK..", ".K.K.K.", "K..K..K"],
 }
 

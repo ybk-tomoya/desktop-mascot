@@ -10,12 +10,15 @@ struct Appearance {
 
 extension Mascot {
     func start(_ a: MascotAction?) {
-        replyingToChat = false
+        if !(a?.isChat == true || (a?.sit == true && isSitting)) {
+            replyDelay = nil
+            leaveChat()
+        }
         guard let a else {
             rest()
             return
         }
-        if manualSit && !a.sit {
+        if (manualSit && !a.sit) || (isSitting && (a.isChat || a.trigger == .near)) {
             react(with: a)
             return
         }
@@ -32,8 +35,15 @@ extension Mascot {
     }
 
     func finish(_ a: MascotAction) {
+        if a.trigger == .talk {
+            passTurn()
+            return
+        }
         if a.sit || manualSit, let sit = sitAgain() {
             start(sit)
+            if let p = nearPeer(), Int.random(in: 0..<30) == 0 {
+                _ = startChat(with: p)
+            }
             return
         }
         for (name, chance) in a.next where Double.random(in: 0..<1) < chance {
@@ -53,6 +63,7 @@ extension Mascot {
         view.effect = nil
         view.cutoff = nil
         sink = 0
+        stepReply()
         if tick % (standingOn == nil ? 10 : 3) == 0 {
             desktopWindows = Desktop.windows()
             followStandingWindow()
@@ -87,11 +98,7 @@ extension Mascot {
         } else if ticks <= 0 {
             if let sit = sitAgain() {
                 start(sit)
-            } else if replyingToChat, let a = character.randomAction(.near) {
-                start(a)
-            } else if let p = nearPeer(), Int.random(in: 0..<3) == 0, let a = character.randomAction(.near) {
-                start(a)
-                p.answerChat()
+            } else if let p = nearPeer(), Int.random(in: 0..<3) == 0, startChat(with: p) {
             } else {
                 let onTop = ground(below: y).window != nil
                 start(onTop && Int.random(in: 0..<3) == 0 ? character.randomAction(.top) : character.randomAction(.idle, app: appBehind()))
@@ -105,6 +112,9 @@ extension Mascot {
 
     func stepActing(_ a: MascotAction, t: Int, length: Int) {
         perform(a, t: t, length: length)
+        if a.isChat, !stepChat(a, t: t) {
+            return
+        }
         if a.sit {
             stepSitting()
         }

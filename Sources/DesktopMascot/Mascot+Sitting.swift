@@ -5,6 +5,11 @@ extension Mascot {
         standingOn != nil || ground(below: y).window != nil
     }
 
+    var isSitting: Bool {
+        if case .acting(let a, _, _) = state { return a.sit }
+        return false
+    }
+
     var sitForever: Bool { UserDefaults.standard.bool(forKey: Self.sitKey) }
 
     func sitAgain() -> MascotAction? {
@@ -44,7 +49,13 @@ extension Mascot {
         if !r.frames.isEmpty {
             appearance.face = r.pose(at: t).face ?? appearance.face
         }
+        if r.isChat, !stepChat(r, t: t) {
+            return
+        }
         showEffect(r, t: t, length: length)
         reaction = t + 1 >= length ? nil : (r, t + 1, length)
+        if reaction == nil, r.trigger == .talk {
+            passTurn()
+        }
     }
 }
