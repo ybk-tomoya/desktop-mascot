@@ -10,6 +10,7 @@ struct Appearance {
 
 extension Mascot {
     func start(_ a: MascotAction?) {
+        replyingToChat = false
         guard let a else {
             rest()
             return
@@ -86,6 +87,8 @@ extension Mascot {
         } else if ticks <= 0 {
             if let sit = sitAgain() {
                 start(sit)
+            } else if replyingToChat, let a = character.randomAction(.near) {
+                start(a)
             } else if let p = nearPeer(), Int.random(in: 0..<3) == 0, let a = character.randomAction(.near) {
                 start(a)
                 p.answerChat()
@@ -96,7 +99,7 @@ extension Mascot {
         } else {
             state = .idle(ticks: ticks - 1)
         }
-        appearance.breath = (60..<84).contains(tick % 100) ? 1 : 0
+        appearance.breath = (60..<84).contains((tick + characterOrder * 100 / MascotCharacter.all.count) % 100) ? 1 : 0
         lookAround()
     }
 

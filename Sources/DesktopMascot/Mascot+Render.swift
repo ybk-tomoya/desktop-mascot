@@ -13,8 +13,12 @@ struct FrameCache {
 }
 
 extension Mascot {
+    var characterOrder: Int {
+        MascotCharacter.all.firstIndex { $0.id == character.id } ?? 0
+    }
+
     var isBlinking: Bool {
-        tick % 70 < 3
+        (tick + characterOrder * 70 / MascotCharacter.all.count) % 70 < 3
     }
 
     func perform(_ a: MascotAction?, t: Int, length: Int) {

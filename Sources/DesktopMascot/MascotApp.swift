@@ -82,6 +82,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
         mascots.removeAll { !ids.contains($0.character.id) }
         for (i, c) in wanted.enumerated() where !mascots.contains(where: { $0.character.id == c.id }) {
             let m = Mascot(character: Mascot.dressed(c), at: CGFloat(i + 1) / CGFloat(wanted.count + 1))
+            m.state = .idle(ticks: 40 + i * 60)
             m.peers = { [weak self] in self?.mascots ?? [] }
             m.onHide = { [weak self] in self?.setVisible(false) }
             m.setVisible(visible)

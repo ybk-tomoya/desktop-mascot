@@ -10,7 +10,8 @@ extension Mascot {
     }
 
     func answerChat() {
-        guard case .idle = state, let a = character.randomAction(.near) else { return }
-        start(a)
+        guard case .idle = state else { return }
+        replyingToChat = true
+        state = .idle(ticks: 15)
     }
 }

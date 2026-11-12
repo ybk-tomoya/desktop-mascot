@@ -20,7 +20,7 @@ final class Mascot: NSObject {
     static let gravity: CGFloat = 1.2
     static let lookDistance: CGFloat = 300
     static let chatDistance: CGFloat = 200
-    static let restRange = 400...900
+    static let restRange = 1200...2400
     static let outfitKeyPrefix = "outfit."
     static let wornKeyPrefix = "worn."
     static let sitKey = "sitForever"
@@ -53,6 +53,7 @@ final class Mascot: NSObject {
     var desktopWindows: [DesktopWindow] = []
     var standingOn: Int?
     var manualSit = false
+    var replyingToChat = false
     var reaction: (action: MascotAction, t: Int, length: Int)?
     var sink: CGFloat = 0
     var appearance = Appearance()
