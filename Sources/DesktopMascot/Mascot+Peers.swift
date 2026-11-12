@@ -29,6 +29,13 @@ extension Mascot {
         }
     }
 
+    func peerAhead() -> Mascot? {
+        peers().first {
+            $0 !== self && $0.window.isVisible && abs($0.y - y) < 4
+                && ($0.x - x) * direction > 0 && abs($0.x - x) < Self.personalSpace
+        }
+    }
+
     func startChat(with p: Mascot) -> Bool {
         guard canChat, p.canChat, let talk = character.randomAction(.talk), let listen = p.character.listenAction(for: talk) else { return false }
         let turns = Int.random(in: 4...6)

@@ -20,6 +20,7 @@ final class Mascot: NSObject {
     static let gravity: CGFloat = 1.2
     static let lookDistance: CGFloat = 300
     static let chatDistance: CGFloat = 200
+    static let personalSpace: CGFloat = 60
     static let restRange = 900...2000
     static let outfitKeyPrefix = "outfit."
     static let wornKeyPrefix = "worn."

@@ -62,6 +62,9 @@ extension Mascot {
         let range = g.window == nil
             ? g.span.lowerBound...(g.span.upperBound - w)
             : (g.span.lowerBound + Self.ledgeMargin - w / 2)...(g.span.upperBound - Self.ledgeMargin - w / 2)
+        if peerAhead() != nil {
+            direction *= -1
+        }
         x += direction * Self.speed
         appearance.walkStep = (tick / 4) % 4
         state = ticks <= 0 ? .idle(ticks: Int.random(in: Self.restRange)) : .walking(ticks: ticks - 1)
