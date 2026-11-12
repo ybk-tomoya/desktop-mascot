@@ -1464,10 +1464,6 @@ enum NijikaSprites {
                      mood: nil, moods: [],
                      frames: [],
                      lift: nil, effect: nil, next: []),
-        MascotAction(name: "drum", trigger: .idle, weight: 3, walk: false, sit: false, duration: 60...140, strength: nil, apps: nil,
-                     mood: nil, moods: [],
-                     frames: [MascotPose(face: "happy", arms: "drumLeft", legs: "stand", ticks: 3), MascotPose(face: "happy", arms: "drumRight", legs: "stand", ticks: 3)],
-                     lift: nil, effect: MascotEffect(glyph: "note", period: 24, from: nil, until: nil, dx: [-20, 20]), next: []),
         MascotAction(name: "stretch", trigger: .idle, weight: 2, walk: false, sit: false, duration: 50...50, strength: nil, apps: nil,
                      mood: nil, moods: [],
                      frames: [MascotPose(face: "yawn", arms: "bothUp", legs: "stand", ticks: 1)],
@@ -1672,6 +1668,10 @@ enum NijikaSprites {
                      mood: nil, moods: [],
                      frames: [MascotPose(face: nil, arms: "down", legs: "together", ticks: 1)],
                      lift: nil, effect: nil, next: []),
+        MascotAction(name: "drum", trigger: .idle, weight: 3, walk: false, sit: false, duration: 60...140, strength: nil, apps: nil,
+                     mood: nil, moods: [],
+                     frames: [MascotPose(face: "happy", arms: "drumLeft", legs: "stand", ticks: 3), MascotPose(face: "happy", arms: "drumRight", legs: "stand", ticks: 3)],
+                     lift: nil, effect: MascotEffect(glyph: "note", period: 24, from: nil, until: nil, dx: [-20, 20]), next: []),
     ]
 
     static let body0 = [

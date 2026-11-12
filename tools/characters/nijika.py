@@ -1,4 +1,5 @@
 from sprite_engine import *
+from base_character import *
 
 ID = "nijika"
 NAME = "伊地知虹夏"
@@ -6,9 +7,6 @@ W, H, OY = 48, 72, 4
 ORDER = 0
 OUTFITS = [("uniform", "制服"), ("casual", "私服")]
 ACCESSORIES = ["cap", "glasses", "ribbon"]
-ARMS = ("down", "drumLeft", "drumRight", "flailLeft", "flailRight", "bothUp", "peace", "heart", "behindHead", "typeLeft", "typeRight", "grab", "peek")
-LEGS = ("stand", "together", "sit", "kickLeft", "kickRight", "dangleLeft", "dangleRight")
-configure(W, H, OY)
 
 PALETTE = {
     "K": (0.20, 0.13, 0.17),
@@ -38,11 +36,6 @@ PALETTE = {
 
 
 # ---------- front ----------
-CX = 24
-HEAD = (CX, 15, 13.5, 13)
-FACE_POLY = [(14, 10), (34, 10), (35, 17), (34, 22), (31, 26.5), (26.5, 29), (21.5, 29), (17, 26.5), (14, 22), (13, 17)]
-
-
 def front_body(outfit):
     L = Layer()
     L.paint(ellipse(*HEAD), "H", "hairback")
@@ -66,7 +59,7 @@ def front_body(outfit):
             L.shade(line((x0 + 0.5, 42), (CX + (x0 + 0.5 - CX) * 1.4, 50), 0.5), "d", {"skirt"})
         L.paint(poly([(17, 28.5), (24, 31), (17, 35)]) + poly([(31, 28.5), (24, 31), (31, 35)]) + rect(22, 29, 26, 33)
                 + poly([(22, 32), (18.5, 39.5), (22.5, 40), (24, 33)]) + poly([(26, 32), (29.5, 39.5), (25.5, 40), (24, 33)]), "R", "bow")
-    L.paint(poly(FACE_POLY), "S", "face")
+    paint_face(L)
     L.paint(poly([(10.5, 16), (14, 12), (16.5, 34), (13, 36), (10.5, 30)]), "H", "lock")
     L.paint(poly([(37.5, 16), (34, 12), (31.5, 34), (35, 36), (37.5, 30)]), "H", "lock")
     L.shade(line((13, 22), (14, 34), 0.6), "G", {"lock"})
@@ -76,61 +69,36 @@ def front_body(outfit):
                    (24, 12), (21.5, 16.5), (19, 12), (16.5, 16), (14.5, 12.5), (12.5, 16.5), (10.5, 21)])
     L.paint(bangs, "H", "bangs")
     L.shade(ellipse(CX, 7.5, 10, 2.2), "h", {"bangs", "hairback"})
-    L.shade(where(poly(FACE_POLY), lambda x, y: L.g[y - 1 + OY][x] == "bangs"), "s", {"face"})
+    shade_under_bangs(L)
     L.paint(poly([(21.5, 3.5), (21.5, -3.5), (28, 3.5)]), "H", "ahoge")
     L.shade(line((22.5, -1), (22.5, 2.5), 0.5), "h", {"ahoge"})
     L.paint(rect(35, 6, 38, 10), "R", "tie")
     return L.outline().rows()
 
 
-def arm_pts(shoulder, elbow, hand, reach=0.6):
-    upper = line(shoulder, elbow, 1.7)
-    lower = line(elbow, hand, 1.5)
-    sl = line(shoulder, (shoulder[0] + (elbow[0] - shoulder[0]) * reach, shoulder[1] + (elbow[1] - shoulder[1]) * reach), 2.2)
-    return upper + lower, sl, ellipse(hand[0], hand[1], 1.8, 1.8)
-
-
-def front_arms(kind, outfit):
-    L = Layer()
-    LS, RS = (18, 31), (30, 31)
-    down_l = (LS, (16, 37), (15.5, 43))
-    down_r = (RS, (32, 37), (32.5, 43))
-    up_l = (LS, (12, 25), (11, 18))
-    up_r = (RS, (36, 25), (37, 18))
-    poses = {
-        "down": (down_l, down_r),
-        "drumLeft": ((LS, (12, 31), (12, 24)), (RS, (34, 37), (30, 40))),
-        "drumRight": ((LS, (14, 37), (18, 40)), (RS, (36, 31), (36, 24))),
-        "flailLeft": (up_l, (RS, (35, 37), (38, 42))),
-        "flailRight": ((LS, (13, 37), (10, 42)), up_r),
-        "bothUp": (up_l, up_r),
-        "peace": ((LS, (12, 34), (13.5, 25)), down_r),
-        "heart": ((LS, (12.5, 38), (22, 33.5)), (RS, (35.5, 38), (26, 33.5))),
-        "behindHead": ((LS, (9.5, 23), (12.5, 12)), (RS, (38.5, 23), (35.5, 12))),
-        "typeLeft": ((LS, (14.5, 38), (20.5, 38.5)), (RS, (33.5, 38), (27.5, 41))),
-        "typeRight": ((LS, (14.5, 38), (20.5, 41)), (RS, (33.5, 38), (27.5, 38.5))),
-        "grab": ((LS, (9, 22), (8.5, 4)), (RS, (30, 31), (39.5, 4)) if False else (RS, (39, 22), (39.5, 4))),
-        "peek": ((LS, (11.5, 35), (9.5, 33)), (RS, (36.5, 35), (38.5, 33))),
-    }
-    sticks = {
-        "drumLeft": [((12, 24), (9, 16)), ((30, 40), (24, 44))],
-        "drumRight": [((36, 24), (39, 16)), ((18, 40), (24, 44))],
-    }
+def arm_painter(outfit):
     casual = outfit == "casual"
-    for s, e, hnd in poses[kind]:
-        skin, sleeve, hand = arm_pts(s, e, hnd, 0.4 if casual else 0.6)
-        L.paint(skin, "S", "arm")
-        L.paint(sleeve, "A" if casual else "W", "sleeve")
-        L.paint(hand, "S", "hand")
-    for p, q in sticks.get(kind, []):
-        L.paint(line(p, q, 0.8), "T", "stick")
-    if kind == "grab":
-        for ex, hx in ((9, 8.5), (39, 39.5)):
-            L.paint(line((ex, 22), (hx, 5), 1.9), "S", "arm")
-            L.paint(ellipse(hx, 4, 3, 2.8), "S", "hand")
-    if kind == "peace":
-        L.paint(line((13, 24), (12, 20), 0.7) + line((14.5, 24), (15.5, 20), 0.7), "S", "hand")
-    return L.outline().rows()
+    reach = 0.4 if casual else 0.6
+
+    def paint(L, shoulder, elbow, hand):
+        L.paint(line(shoulder, elbow, 1.7) + line(elbow, hand, 1.5), "S", "arm")
+        L.paint(line(shoulder, (shoulder[0] + (elbow[0] - shoulder[0]) * reach, shoulder[1] + (elbow[1] - shoulder[1]) * reach), 2.2),
+                "A" if casual else "W", "sleeve")
+        L.paint(ellipse(hand[0], hand[1], 1.8, 1.8), "S", "hand")
+    return paint
+
+
+def sticks(*pairs):
+    def paint(L):
+        for p, q in pairs:
+            L.paint(line(p, q, 0.8), "T", "stick")
+    return paint
+
+
+STICKS = {
+    "drumLeft": sticks(((12, 24), (9, 16)), ((30, 40), (24, 44))),
+    "drumRight": sticks(((36, 24), (39, 16)), ((18, 40), (24, 44))),
+}
 
 
 def shoe(L, foot, group="shoe"):
@@ -162,81 +130,14 @@ def front_legs(kind, outfit):
     return L.outline().rows()
 
 
-EYE = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WEEFEEW", ".EeeWE.", "..eee.."]
-CLOSED = [".......", ".......", ".......", ".......", ".......", "K.....K", ".KKKKK.", "......."]
-HAPPY = [".......", ".......", ".......", ".KKKKK.", "K.....K", ".......", "......."]
-LOOK_LEFT = [".KKKKK.", "KFFFWWK", "FWWFFWW", "EWWFEWW", "EFFFEWW", "EEFEEWW", "EeeWE..", ".eee..."]
-LOOK_UP = [".KKKKK.", "KWFFFWK", "WFWWFFW", "WEWWFEW", "WEFFFEW", "WWEEEWW", ".WWWWW.", "..KKK.."]
-LOOK_DOWN = [".......", ".KKKKK.", "KWWWWWK", "WFFWFFW", "WEFFFEW", "WEEFEEW", ".EeeEE.", "..eee.."]
-LOOK_RIGHT = [".KKKKK.", "KWWFFFK", "WWFWWFF", "WWEWWFE", "WWEFFFE", "WWEEFEE", "..EeeWE", "...eee."]
-SURPRISED = [".KKKKK.", "KWWWWWK", "WWFFFWW", "WWFWFWW", "WWFFFWW", "WWWWWWW", ".WWWWW.", "..KKK.."]
-DIZZY = ["..KKK..", ".K...K.", "K..K..K", "K.K.K.K", "K.K..K.", ".K.KK..", "..K....", "......."]
-GT = [".......", "KK.....", "..KK...", "....KKK", "..KK...", "KK.....", "......."]
-
-
-def face_layer(left, right, mouth="normal", blush_color="p", eye_y=16, lx=15, rx=26, blush=((14, 24), (30, 24))):
-    g = [["."] * W for _ in range(H)]
-    for pat, x0 in ((left, lx), (right, rx)):
-        for dy, r in enumerate(pat):
-            for dx, ch in enumerate(r):
-                if ch != ".":
-                    g[eye_y + dy + OY][x0 + dx] = ch
-    for bx, by in blush:
-        for x, y in [(bx + i, by) for i in range(4)] + [(bx + i, by + 1) for i in range(1, 3)]:
-            if g[y + OY][x] == ".":
-                g[y + OY][x] = blush_color
-    my = 26 + OY
-    if mouth == "normal":
-        g[my][23] = g[my][24] = "m"
-    elif mouth == "open":
-        g[my][23] = g[my][24] = "m"; g[my + 1][23] = g[my + 1][24] = "R"
-    elif mouth == "o":
-        for x, y in ((23, my), (24, my), (22, my + 1), (25, my + 1), (23, my + 2), (24, my + 2)):
-            g[y][x] = "m"
-        g[my + 1][23] = g[my + 1][24] = "R"
-    return ["".join(r) for r in g]
-
-
-def front_faces():
-    return {
-        "normal": face_layer(EYE, EYE),
-        "talk": face_layer(EYE, EYE, "open"),
-        "talkLeft": face_layer(LOOK_LEFT, LOOK_LEFT, "open"),
-        "talkRight": face_layer(LOOK_RIGHT, LOOK_RIGHT, "open"),
-        "blink": face_layer(CLOSED, CLOSED),
-        "happy": face_layer(HAPPY, HAPPY, "open"),
-        "smile": face_layer(HAPPY, HAPPY),
-        "panic": face_layer(GT, mirror(GT), "o"),
-        "wink": face_layer(EYE, HAPPY, "open"),
-        "surprised": face_layer(SURPRISED, SURPRISED, "o"),
-        "shy": face_layer(HAPPY, HAPPY, "normal", blush_color="P"),
-        "dizzy": face_layer(DIZZY, mirror(DIZZY), "o"),
-        "yawn": face_layer(CLOSED, CLOSED, "o"),
-        "lookLeft": face_layer(LOOK_LEFT, LOOK_LEFT),
-        "lookRight": face_layer(LOOK_RIGHT, LOOK_RIGHT),
-        "lookDown": face_layer(LOOK_DOWN, LOOK_DOWN),
-        "lookUp": face_layer(LOOK_UP, LOOK_UP),
-    }
-
-
 # ---------- side (facing right) ----------
-SX = 23
-
-
-HX = -2
-
-
-def hs(pts):
-    return [(x + HX, y) for x, y in pts]
-
-
 SIDELOCK = [
     ([(21, 12), (25.5, 12), (27, 19), (26.5, 26), (24.5, 31), (22.5, 34), (22.5, 26), (21, 19)],
      [((23.2, 15), (24, 30), "G", 0.5), ((25.5, 15), (26, 22), "h", 0.4)]),
 ]
 
 
-def side_body(near_tail, outfit):
+def side_body(outfit, near_tail):
     L = Layer()
     tail = hs(poly([(13, 8), (18, 9), (16, 20), (15, 36), (14, 48), (11, 53), (10, 46), (11, 32), (10, 18)]))
     if not near_tail:
@@ -257,8 +158,7 @@ def side_body(near_tail, outfit):
         for x0 in (20, 23, 26):
             L.shade(line((x0 + 0.5, 42), (SX + (x0 + 0.5 - SX) * 1.5, 50), 0.5), "d", {"skirt"})
         L.paint(poly([(26.5, 29), (30.5, 30), (29.5, 33.5), (26.5, 33)]) + poly([(27, 32), (29.5, 37), (26.5, 36)]), "R", "bow")
-    L.paint(hs(poly([(22, 9), (30, 9), (33.5, 11.5), (35, 14), (35.5, 17), (35.5, 19.5), (36.5, 21), (35.6, 22), (37, 23), (37, 24.5), (35, 25.5),
-                     (32.5, 27), (29.5, 29), (26, 29), (23, 27)])), "S", "face")
+    paint_side_face(L)
     for pts, shade in SIDELOCK:
         L.paint(hs(poly(pts)), "H", "sidelock")
         for p, q, color, w in shade:
@@ -267,24 +167,13 @@ def side_body(near_tail, outfit):
     bangs += poly([(21, 9), (36.5, 9), (36.5, 13.5), (35, 16.5), (33.5, 12.5), (31.5, 16), (29.5, 12), (27, 16), (25, 12.5), (23, 16), (21, 13)])
     L.paint(hs(bangs), "H", "bangs")
     L.shade(hs(ellipse(SX - 1, 7.5, 9, 2.2)), "h", {"bangs", "hairback"})
-    L.shade(where(hs(rect(23, 10, 37, 28)), lambda x, y: L.g[y - 1 + OY][x] == "bangs"), "s", {"face"})
+    shade_side_under_bangs(L)
     L.paint(hs(poly([(20.5, 3.5), (20.5, -3.5), (27, 3.5)])), "H", "ahoge")
     L.shade(hs(line((21.5, -1), (21.5, 2.5), 0.5)), "h", {"ahoge"})
     if near_tail:
         L.paint(hs(rect(11, 6, 16, 11)), "R", "tie")
         L.paint(tail, "H", "tail")
         L.shade(hs(line((13, 13), (12.5, 46), 0.6)), "h", {"tail"})
-    return L.outline().rows()
-
-
-def side_arm(swing, outfit):
-    L = Layer()
-    s = (23, 31)
-    e = (23 + swing * 0.5, 37)
-    h = (23 + swing, 43)
-    casual = outfit == "casual"
-    skin, sleeve, hand = arm_pts(s, e, h, 0.4 if casual else 0.6)
-    L.paint(skin, "S", "arm"); L.paint(sleeve, "A" if casual else "W", "sleeve"); L.paint(hand, "S", "hand")
     return L.outline().rows()
 
 
@@ -305,214 +194,23 @@ def side_legs(step, outfit):
     return L.outline().rows()
 
 
-SEYE = ["...KK", "..KFF", "WWFWF", "WWFWF", "WWEFF", ".WEEF", "...EW", "....e"]
-SCLOSED = ["....", "....", "....", "....", "....", "K..K", ".KK.", "...."]
-
-
-def side_face(pat):
-    g = [["."] * W for _ in range(H)]
-    for dy, r in enumerate(pat):
-        for dx, ch in enumerate(r):
-            if ch != ".":
-                g[16 + dy + OY][27 + dx] = ch
-    for x, y in ((25, 24), (26, 24), (27, 24), (28, 24), (26, 25), (27, 25)):
-        if g[y + OY][x] == ".":
-            g[y + OY][x] = "p"
-    return ["".join(r) for r in g]
-
-
 def build(outfit):
-    sides = {}
-    for name, near in (("right", False), ("left", True)):
-        side = {
-            "body": side_body(near, outfit),
-            "face": side_face(SEYE),
-            "blink": side_face(SCLOSED),
-            "legs": [side_legs(i, outfit) for i in range(WALK_STEPS)],
-            "arms": [side_arm(sw, outfit) for sw in (-5, 0, 5, 0)],
-        }
-        if name == "left":
-            side = {k: [mirror(r) for r in v] if k in ("legs", "arms") else mirror(v) for k, v in side.items()}
-        sides[name] = side
-    return {
-        "body": front_body(outfit),
-        "faces": front_faces(),
-        "arms": {k: front_arms(k, outfit) for k in ARMS},
-        "legs": {k: front_legs(k, outfit) for k in LEGS},
-        "drops": {"sit": 14},
-        "right": sides["right"],
-        "left": sides["left"],
-    }
+    paint = arm_painter(outfit)
+    return assemble(
+        outfit, front_body=front_body, side_body=side_body,
+        front_arms=lambda k, o: front_arms(k, paint, STICKS), front_legs=front_legs,
+        side_arm=lambda sw, o: side_arm(sw, paint), side_legs=side_legs,
+        faces=standard_faces(), arms=("down", "drumLeft", "drumRight") + STANDARD_ARMS[1:], legs=STANDARD_LEGS)
 
 
-ACTIONS = [
-    {"name": "walk", "trigger": "idle", "weight": 6, "walk": True, "duration": (40, 160)},
-    {"name": "drum", "trigger": "idle", "weight": 3, "duration": (60, 140),
-     "frames": [{"face": "happy", "arms": "drumLeft", "ticks": 3}, {"face": "happy", "arms": "drumRight", "ticks": 3}],
-     "effect": {"glyph": "note", "period": 24, "dx": [-20, 20]}},
-    {"name": "stretch", "trigger": "idle", "weight": 2, "duration": (50, 50),
-     "frames": [{"face": "yawn", "arms": "bothUp"}],
-     "lift": {"type": "rise", "height": 4, "from": 10, "to": 40},
-     "next": {"sleep": 1 / 3}},
-    {"name": "sneeze", "trigger": "idle", "weight": 2, "duration": (14, 14),
-     "frames": [{"face": "blink", "legs": "together"}],
-     "lift": {"type": "rise", "height": 2, "from": 4, "to": 14},
-     "next": {"sneezeBurst": 1}},
-    {"name": "sneezeBurst", "trigger": "chained", "duration": (12, 12),
-     "frames": [{"face": "panic", "legs": "together"}],
-     "lift": {"type": "jump", "height": 6},
-     "effect": {"glyph": "sneeze", "until": 12, "dx": [18]},
-     "next": {"sneezeSniff": 1}},
-    {"name": "sneezeSniff", "trigger": "chained", "duration": (36, 36),
-     "frames": [{"face": "shy", "legs": "together"}]},
-    {"name": "jumpUp", "trigger": "jump", "frames": [{"face": "happy", "legs": "together"}], "next": {"hop": 1}},
-    {"name": "hop", "trigger": "idle", "weight": 2, "duration": (45, 45),
-     "frames": [{"face": "happy", "legs": "together"}],
-     "lift": {"type": "hop", "height": 12, "period": 15}},
-    {"name": "doze", "trigger": "idle", "weight": 2,
-     "frames": [{"ticks": 10}, {"face": "blink", "ticks": 6}, {"ticks": 6}, {"face": "blink", "ticks": 10}, {"ticks": 4}, {"face": "blink", "ticks": 20}],
-     "lift": {"type": "hop", "height": 2, "period": 28},
-     "effect": {"glyph": "zzz", "period": 28, "dx": [16]},
-     "next": {"dozeWake": 1}},
-    {"name": "dozeWake", "trigger": "chained", "duration": (24, 24),
-     "frames": [{"face": "surprised"}],
-     "lift": {"type": "jump", "height": 8},
-     "effect": {"glyph": "exclaim", "until": 18, "dx": [12]}},
-    {"name": "dizzySpin", "trigger": "circle", "duration": (80, 80),
-     "frames": [{"face": "dizzy", "legs": "together"}],
-     "lift": {"type": "hop", "height": 2, "period": 20},
-     "effect": {"glyph": "dizzy", "period": 8, "dx": [-14, 0, 14, 0]}},
-    {"name": "cheer", "trigger": "idle", "weight": 2, "duration": (40, 40),
-     "frames": [{"face": "happy", "arms": "bothUp", "legs": "together"}],
-     "lift": {"type": "hop", "height": 10, "period": 10}},
-    {"name": "stareSky", "trigger": "idle", "weight": 2, "duration": (68, 136),
-     "frames": [{"face": "lookUp", "ticks": 30}, {"face": "blink", "ticks": 4}, {"face": "lookUp", "ticks": 30}, {"face": "blink", "ticks": 4}],
-     "effect": {"glyph": "cloud", "period": 50, "dx": [14]}},
-    {"name": "petLove", "trigger": "pet", "duration": (50, 50),
-     "frames": [{"face": "happy"}],
-     "effect": {"glyph": "heart", "period": 10, "dx": [-14, 0, 14, -7, 7]}},
-    {"name": "sleep", "trigger": "idle", "weight": 1, "duration": (200, 400),
-     "frames": [{"face": "blink", "legs": "sit"}],
-     "effect": {"glyph": "zzz", "period": 40, "dx": [16]}},
-    {"name": "happy", "trigger": "click", "weight": 1, "duration": (30, 30),
-     "frames": [{"face": "happy"}],
-     "lift": {"type": "jump", "height": 16},
-     "effect": {"glyph": "heart", "dx": [0]}},
-    {"name": "peace", "trigger": "click", "weight": 1, "duration": (40, 40),
-     "frames": [{"face": "wink", "arms": "peace"}],
-     "effect": {"glyph": "heart", "until": 20, "dx": [-16]}},
-    {"name": "lookAround", "trigger": "idle", "weight": 2, "duration": (56, 56),
-     "frames": [{"face": "lookLeft", "ticks": 10}, {"ticks": 4}, {"face": "lookRight", "ticks": 10}, {"ticks": 4}],
-     "effect": {"glyph": "question", "dx": [14]}},
-    {"name": "heart", "trigger": "idle", "weight": 1, "duration": (50, 50),
-     "frames": [{"face": "happy", "arms": "heart"}],
-     "effect": {"glyph": "heart", "period": 25, "dx": [0]}},
-    {"name": "surprised", "trigger": "click", "weight": 1, "duration": (24, 24),
-     "frames": [{"face": "surprised"}],
-     "lift": {"type": "jump", "height": 10},
-     "effect": {"glyph": "exclaim", "until": 18, "dx": [12]}},
-    {"name": "pet", "trigger": "pet", "duration": (40, 40),
-     "frames": [{"face": "shy"}],
-     "effect": {"glyph": "heart", "period": 20, "dx": [-12, 12]}},
-    {"name": "wheee", "trigger": "throw", "strength": (0, 20),
-     "frames": [{"face": "happy", "arms": "bothUp", "legs": "together"}]},
-    {"name": "thrown", "trigger": "throw", "strength": (20, 999),
-     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 2},
-                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 2}]},
-    {"name": "landHappy", "trigger": "land", "strength": (0, 20), "duration": (30, 30),
-     "frames": [{"face": "happy"}],
-     "lift": {"type": "jump", "height": 10},
-     "effect": {"glyph": "heart", "dx": [0]}},
-    {"name": "landSurprised", "trigger": "land", "strength": (20, 40), "duration": (30, 30),
-     "frames": [{"face": "surprised", "legs": "together"}],
-     "effect": {"glyph": "exclaim", "until": 24, "dx": [12]}},
-    {"name": "dizzy", "trigger": "land", "strength": (40, 999), "duration": (60, 60),
-     "frames": [{"face": "dizzy", "legs": "sit"}],
-     "effect": {"glyph": "dizzy", "period": 8, "dx": [-14, 0, 14, 0]}},
-    {"name": "eat", "trigger": "eat", "duration": (60, 60),
-     "frames": [{"face": "happy", "ticks": 5}, {"face": "shy", "ticks": 5}],
-     "effect": {"glyph": "heart", "period": 30, "dx": [12]}},
-    {"name": "flail", "trigger": "drag",
-     "frames": [{"face": "panic", "arms": "flailLeft", "legs": "kickRight", "ticks": 3},
-                {"face": "panic", "arms": "flailRight", "legs": "kickLeft", "ticks": 3}]},
-    {"name": "ledgeSit", "trigger": "ledge", "weight": 2, "duration": (100, 200),
-     "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
-     "lift": {"type": "sink", "height": 36}},
-    {"name": "sitTop", "trigger": "top", "sit": True, "duration": (60, 200),
-     "frames": [{"legs": "dangleLeft", "ticks": 8}, {"legs": "dangleRight", "ticks": 8}],
-     "lift": {"type": "sink", "height": 36},
-     "next": {"sitTopSmile": 0.3, "sitTopLook": 0.22, "sitTopBlink": 0.27, "sitTop": 0.75}},
-    {"name": "sitTopSmile", "trigger": "chained", "sit": True, "duration": (70, 90),
-     "frames": [{"face": "happy", "legs": "dangleLeft", "ticks": 8}, {"face": "happy", "legs": "dangleRight", "ticks": 8}],
-     "lift": {"type": "sink", "height": 36},
-     "next": {"sitTop": 1}},
-    {"name": "sitTopLook", "trigger": "chained", "sit": True, "duration": (20, 20),
-     "frames": [{"face": "lookLeft", "legs": "dangleLeft", "ticks": 10}, {"face": "lookRight", "legs": "dangleRight", "ticks": 10}],
-     "lift": {"type": "sink", "height": 36},
-     "next": {"sitTop": 1}},
-    {"name": "sitTopBlink", "trigger": "chained", "sit": True, "duration": (8, 8),
-     "frames": [{"face": "blink", "legs": "dangleLeft"}],
-     "lift": {"type": "sink", "height": 36},
-     "next": {"sitTop": 1}},
-    {"name": "hang", "trigger": "ledge", "weight": 1, "duration": (80, 160),
-     "frames": [{"face": "panic", "arms": "grab", "legs": "dangleLeft", "ticks": 6}, {"face": "panic", "arms": "grab", "legs": "dangleRight", "ticks": 6}],
-     "lift": {"type": "sink", "height": 124}},
-    {"name": "cling", "trigger": "ledge", "weight": 1, "duration": (60, 100),
-     "frames": [{"arms": "grab", "ticks": 8}, {"arms": "grab", "ticks": 8}],
-     "lift": {"type": "cling", "height": 117}},
-    {"name": "clingTop", "trigger": "top", "duration": (120, 160),
-     "frames": [{"arms": "peek"}],
-     "lift": {"type": "cling", "height": 68}},
-    {"name": "chatNote", "trigger": "near", "duration": (40, 40),
-     "frames": [{"face": "happy"}],
-     "effect": {"glyph": "note", "dx": [14]}},
-    {"name": "chatHeart", "trigger": "near", "duration": (40, 40),
-     "frames": [{"face": "happy"}],
-     "effect": {"glyph": "heart", "dx": [14]}},
-    {"name": "talk", "trigger": "talk", "weight": 4, "mood": "normal", "duration": (50, 90),
-     "frames": [{"face": "talk", "ticks": 7}, {"ticks": 7}],
-     "effect": {"glyph": "talk", "period": 45, "dx": [14]}},
-    {"name": "talkFun", "trigger": "talk", "weight": 5, "mood": "fun", "duration": (50, 90),
-     "frames": [{"face": "happy", "ticks": 7}, {"face": "smile", "ticks": 7}],
-     "effect": {"glyph": "talkFun", "period": 45, "dx": [14]}},
-    {"name": "talkAsk", "trigger": "talk", "weight": 2, "mood": "question", "duration": (50, 90),
-     "frames": [{"face": "talk", "ticks": 7}, {"face": "lookUp", "ticks": 7}],
-     "effect": {"glyph": "talkAsk", "period": 45, "dx": [14]}},
-    {"name": "talkWow", "trigger": "talk", "weight": 1, "mood": "surprise", "duration": (50, 90),
-     "frames": [{"face": "surprised"}],
-     "lift": {"type": "hop", "height": 3, "period": 20},
-     "effect": {"glyph": "talkWow", "period": 45, "dx": [14]}},
-    {"name": "listen", "trigger": "listen", "weight": 3, "duration": (2000, 2000),
-     "frames": [{"ticks": 1}]},
-    {"name": "listenLaugh", "trigger": "listen", "weight": 3, "moods": ["fun"], "duration": (2000, 2000),
-     "frames": [{"ticks": 20}, {"face": "happy", "ticks": 2000}],
-     "lift": {"type": "hop", "height": 2, "period": 18}},
-    {"name": "listenHeart", "trigger": "listen", "weight": 2, "moods": ["fun"], "duration": (2000, 2000),
-     "frames": [{"ticks": 20}, {"face": "smile", "ticks": 2000}],
-     "effect": {"glyph": "heart", "from": 20, "until": 60, "dx": [0]}},
-    {"name": "listenWow", "trigger": "listen", "weight": 4, "moods": ["surprise"], "duration": (2000, 2000),
-     "frames": [{"ticks": 20}, {"face": "surprised", "ticks": 2000}],
-     "effect": {"glyph": "exclaim", "from": 20, "until": 60, "dx": [0]}},
-    {"name": "listenThink", "trigger": "listen", "weight": 4, "moods": ["question"], "duration": (2000, 2000),
-     "frames": [{"ticks": 20}, {"face": "lookUp", "ticks": 2000}],
-     "effect": {"glyph": "question", "from": 20, "until": 60, "dx": [0]}},
-    {"name": "ledgePeek", "trigger": "ledge", "weight": 1, "duration": (40, 40),
-     "frames": [{"face": "lookDown"}],
-     "effect": {"glyph": "question", "dx": [14]}},
-    {"name": "lean", "trigger": "wall", "weight": 1, "duration": (80, 160),
-     "frames": [{"face": "happy", "arms": "behindHead", "legs": "together"}]},
-    {"name": "type", "trigger": "idle", "weight": 8, "apps": TERMINAL_APPS, "duration": (60, 140),
-     "frames": [{"face": "lookDown", "arms": "typeLeft", "legs": "sit", "ticks": 2},
-                {"face": "lookDown", "arms": "typeRight", "legs": "sit", "ticks": 2}]},
-    {"name": "browse", "trigger": "idle", "weight": 6, "apps": BROWSER_APPS, "duration": (80, 80),
-     "frames": [{"face": "lookLeft", "legs": "sit", "ticks": 20}, {"face": "lookRight", "legs": "sit", "ticks": 20}],
-     "next": {"surprised": 1 / 4}},
-    {"name": "groove", "trigger": "idle", "weight": 8, "apps": MUSIC_APPS, "duration": (80, 160),
-     "frames": [{"face": "happy", "arms": "bothUp", "legs": "together", "ticks": 5}, {"face": "happy", "legs": "together", "ticks": 5}],
-     "lift": {"type": "hop", "height": 6, "period": 10},
-     "effect": {"glyph": "note", "period": 20, "dx": [-16, 16]}},
-    {"name": "fall", "trigger": "fall", "frames": [{"legs": "together"}]},
-]
+ACTIONS = standard_actions(
+    change={"hop": {"weight": 2}, "cheer": {"weight": 2}, "talkFun": {"weight": 5}},
+    add=[
+        {"name": "drum", "trigger": "idle", "weight": 3, "duration": (60, 140),
+         "frames": [{"face": "happy", "arms": "drumLeft", "ticks": 3}, {"face": "happy", "arms": "drumRight", "ticks": 3}],
+         "effect": {"glyph": "note", "period": 24, "dx": [-20, 20]}},
+    ],
+)
 
 GLYPH_PALETTE = {"O": (0.96, 0.62, 0.20), "o": (0.99, 0.80, 0.40)}
 
