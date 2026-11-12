@@ -36,7 +36,7 @@ extension Mascot {
 
     func finish(_ a: MascotAction) {
         if a.trigger == .talk {
-            passTurn()
+            passTurn(after: a)
             return
         }
         if a.sit || manualSit, let sit = sitAgain() {

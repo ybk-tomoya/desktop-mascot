@@ -124,13 +124,14 @@ def action(a):
     effect = "nil"
     if "effect" in a:
         e = a["effect"]
-        effect = f"MascotEffect(glyph: {s(e['glyph'])}, period: {e.get('period', 'nil')}, until: {e.get('until', 'nil')}, dx: {e.get('dx', [0])})"
+        effect = f"MascotEffect(glyph: {s(e['glyph'])}, period: {e.get('period', 'nil')}, from: {e.get('from', 'nil')}, until: {e.get('until', 'nil')}, dx: {e.get('dx', [0])})"
     duration = f"{a['duration'][0]}...{a['duration'][1]}" if "duration" in a else "nil"
     strength = f"{a['strength'][0]}...{a['strength'][1]}" if "strength" in a else "nil"
     apps = s(a["apps"]) if "apps" in a else "nil"
     nxt = "[" + ", ".join(f"({s(k)}, {v})" for k, v in a.get("next", {}).items()) + "]" if a.get("next") else "[]"
     return (f"        MascotAction(name: {s(a['name'])}, trigger: .{a['trigger']}, weight: {a.get('weight', 1)}, "
             f"walk: {str(a.get('walk', False)).lower()}, sit: {str(a.get('sit', False)).lower()}, duration: {duration}, strength: {strength}, apps: {apps},\n"
+            f"                     mood: {s(a['mood']) if 'mood' in a else 'nil'}, moods: {s(a.get('moods', []))},\n"
             f"                     frames: [{frames}],\n"
             f"                     lift: {lift}, effect: {effect}, next: {nxt}),\n")
 

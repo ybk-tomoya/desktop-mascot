@@ -55,7 +55,7 @@ extension Mascot {
         showEffect(r, t: t, length: length)
         reaction = t + 1 >= length ? nil : (r, t + 1, length)
         if reaction == nil, r.trigger == .talk {
-            passTurn()
+            passTurn(after: r)
         }
     }
 }

@@ -39,7 +39,7 @@ extension Mascot {
     func showEffect(_ a: MascotAction, t: Int, length: Int) {
         if let e = a.effect, let glyph = character.glyphs[e.glyph], let (progress, dx) = e.state(t: t, length: length) {
             if a.trigger == .talk, let p = chat?.partner, p.window.frame.midX < window.frame.midX {
-                view.effect = (glyph.map { String($0.reversed()) }, progress, -dx)
+                view.effect = (character.glyphs[e.glyph + "@left"] ?? glyph.map { String($0.reversed()) }, progress, -dx)
             } else {
                 view.effect = (glyph, progress, dx)
             }

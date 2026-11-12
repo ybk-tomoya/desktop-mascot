@@ -58,15 +58,18 @@ enum MascotLift {
 struct MascotEffect {
     let glyph: String
     let period: Int?
+    let from: Int?
     let until: Int?
     let dx: [CGFloat]
 
     func state(t: Int, length: Int) -> (progress: CGFloat, dx: CGFloat)? {
+        let start = from ?? 0
+        if t < start { return nil }
         if let until, t >= until { return nil }
         if let period {
-            return (CGFloat(t % period) / CGFloat(period), dx[(t / period) % dx.count])
+            return (CGFloat((t - start) % period) / CGFloat(period), dx[((t - start) / period) % dx.count])
         }
-        return (CGFloat(t) / CGFloat(until ?? length), dx[0])
+        return (CGFloat(t - start) / CGFloat((until ?? length) - start), dx[0])
     }
 }
 
@@ -88,6 +91,8 @@ struct MascotAction {
     let duration: ClosedRange<Int>?
     let strength: ClosedRange<CGFloat>?
     let apps: [String]?
+    let mood: String?
+    let moods: [String]
     let frames: [MascotPose]
     let lift: MascotLift?
     let effect: MascotEffect?
@@ -156,10 +161,11 @@ struct MascotCharacter {
         actions.first { $0.name == name }
     }
 
-    func randomAction(_ trigger: MascotAction.Trigger, strength: CGFloat? = nil, app: String? = nil) -> MascotAction? {
+    func randomAction(_ trigger: MascotAction.Trigger, strength: CGFloat? = nil, app: String? = nil,
+                      where match: (MascotAction) -> Bool = { _ in true }) -> MascotAction? {
         let candidates = actions.filter { a in
             a.trigger == trigger && (strength.map { s in a.strength?.contains(s) ?? true } ?? true)
-                && (a.apps.map { apps in app.map(apps.contains) ?? false } ?? true)
+                && (a.apps.map { apps in app.map(apps.contains) ?? false } ?? true) && match(a)
         }
         var r = Int.random(in: 0..<max(1, candidates.reduce(0) { $0 + $1.weight }))
         for a in candidates {
@@ -167,6 +173,10 @@ struct MascotCharacter {
             r -= a.weight
         }
         return candidates.first
+    }
+
+    func listenAction(for talk: MascotAction) -> MascotAction? {
+        randomAction(.listen) { $0.moods.isEmpty || $0.moods.contains(talk.mood ?? "") }
     }
 
     static func named(_ id: String?) -> MascotCharacter {

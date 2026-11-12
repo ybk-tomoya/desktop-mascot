@@ -31,6 +31,22 @@ ACCESSORY_PALETTE = {
     "7": (0.78, 0.30, 0.50),
 }
 
+def mirror(rows):
+    return [r[::-1] for r in rows]
+
+
+def bubble(content, left=False):
+    w = max(len(r) for r in content)
+    inner = ["." * w] + [r.ljust(w, ".") for r in content] + ["." * w]
+    rows = ["." + "K" * (w + 2) + "."] + ["KW" + r.replace(".", "W") + "WK" for r in inner]
+    tail = [".KW" + "K" * w + ".", ".KK" + "." * (w + 1)]
+    return rows + (mirror(tail) if left else tail)
+
+
+def bubbles(name, content):
+    return {name: bubble(content), name + "@left": bubble(content, True)}
+
+
 GLYPHS = {
     "heart": [".KK.KK.", "KRRKRRK", "KRWRRRK", ".KRRRK.", "..KRK..", "...K..."],
     "note": ["..KK.", "..KKK", "..K.K", "KKK..", "KKK.."],
@@ -39,7 +55,10 @@ GLYPHS = {
     "exclaim": ["KK", "KK", "KK", "KK", "..", "KK"],
     "dizzy": ["..D..", ".DWD.", "DWWWD", ".DWD.", "..D.."],
     "cloud": ["..KKK.KK...", ".KWWWKWWK..", "KWWWWWWWWKK", "KWWWWWWWWWK", ".KKKKKKKKK."],
-    "talk": [".KKKKKKKKK.", "KWWWWWWWWWK", "KWKWWKWWKWK", "KWWWWWWWWWK", ".KWKKKKKKK.", ".KK........"],
+    **bubbles("talk", ["K..K..K"]),
+    **bubbles("talkFun", ["..KK.", "..K.K", "..K..", "KKK..", "KKK.."]),
+    **bubbles("talkAsk", [".KKK.", "....K", "..KK.", ".....", "..K.."]),
+    **bubbles("talkWow", ["..K..", "..K..", "..K..", ".....", "..K.."]),
     "sneeze": ["K..K..K", ".K.K.K.", "..KKK..", "KKK.KKK", "..KKK..", ".K.K.K.", "K..K..K"],
 }
 
@@ -165,10 +184,6 @@ def taper(p, q, r1, r2):
 
 def where(pts, cond):
     return [(x, y) for x, y in pts if cond(x, y)]
-
-
-def mirror(rows):
-    return [r[::-1] for r in rows]
 
 
 def front_accessories():

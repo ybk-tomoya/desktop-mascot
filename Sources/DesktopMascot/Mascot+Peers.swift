@@ -30,7 +30,7 @@ extension Mascot {
     }
 
     func startChat(with p: Mascot) -> Bool {
-        guard canChat, p.canChat, let talk = character.randomAction(.talk), let listen = p.character.randomAction(.listen) else { return false }
+        guard canChat, p.canChat, let talk = character.randomAction(.talk), let listen = p.character.listenAction(for: talk) else { return false }
         let turns = Int.random(in: 4...6)
         chat = Chat(partner: p, turns: turns)
         p.chat = Chat(partner: self, turns: turns)
@@ -39,12 +39,14 @@ extension Mascot {
         return true
     }
 
-    func passTurn() {
+    func passTurn(after said: MascotAction) {
         guard let c = chat, let p = c.partner else {
             stopChatting()
             return
         }
-        guard c.turns > 1, let talk = p.character.randomAction(.talk), let listen = character.randomAction(.listen) else {
+        let asked = said.mood == "question"
+        guard c.turns > 1 || asked, let talk = p.character.randomAction(.talk, where: { !asked || $0.mood != "question" }),
+              let listen = character.listenAction(for: talk) else {
             endChat()
             return
         }
@@ -95,7 +97,7 @@ extension Mascot {
             }
         }
         if a.trigger == .listen {
-            appearance.breath = t % 40 >= 34 ? 1 : 0
+            appearance.breath = t % 70 >= 60 ? 1 : 0
         }
         return true
     }
