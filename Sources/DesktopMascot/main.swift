@@ -9,6 +9,6 @@ MainActor.assumeIsolated {
     // Background (non-active) apps can't change the cursor without this private property
     let cid = CGSMainConnectionID()
     _ = CGSSetConnectionProperty(cid, cid, "SetsCursorInBackground" as CFString, kCFBooleanTrue)
-    let mascot = Mascot()
-    withExtendedLifetime(mascot) { app.run() }
+    let mascots = MascotApp()
+    withExtendedLifetime(mascots) { app.run() }
 }

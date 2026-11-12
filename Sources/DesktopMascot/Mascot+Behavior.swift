@@ -86,6 +86,9 @@ extension Mascot {
         } else if ticks <= 0 {
             if let sit = sitAgain() {
                 start(sit)
+            } else if let p = nearPeer(), Int.random(in: 0..<3) == 0, let a = character.randomAction(.near) {
+                start(a)
+                p.answerChat()
             } else {
                 let onTop = ground(below: y).window != nil
                 start(onTop && Int.random(in: 0..<3) == 0 ? character.randomAction(.top) : character.randomAction(.idle, app: appBehind()))
@@ -94,7 +97,7 @@ extension Mascot {
             state = .idle(ticks: ticks - 1)
         }
         appearance.breath = (60..<84).contains(tick % 100) ? 1 : 0
-        lookAtMouse()
+        lookAround()
     }
 
     func stepActing(_ a: MascotAction, t: Int, length: Int) {

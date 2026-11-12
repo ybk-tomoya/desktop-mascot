@@ -77,7 +77,7 @@ struct MascotSnack {
 
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, jump, circle, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, near, jump, circle, chained
     }
 
     let name: String

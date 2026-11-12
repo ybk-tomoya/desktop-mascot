@@ -5,6 +5,8 @@ extension Mascot {
         standingOn != nil || ground(below: y).window != nil
     }
 
+    var sitForever: Bool { UserDefaults.standard.bool(forKey: Self.sitKey) }
+
     func sitAgain() -> MascotAction? {
         manualSit || (sitForever && onWindow) ? character.sitAction : nil
     }
@@ -36,7 +38,7 @@ extension Mascot {
 
     func stepSitting() {
         guard let (r, t, length) = reaction else {
-            lookAtMouse()
+            lookAround()
             return
         }
         if !r.frames.isEmpty {

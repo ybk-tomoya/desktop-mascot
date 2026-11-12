@@ -98,10 +98,17 @@ extension Mascot {
         }
     }
 
-    func lookAtMouse() {
-        let m = NSEvent.mouseLocation
+    func lookAround() {
+        if let p = nearPeer() {
+            look(toward: NSPoint(x: p.window.frame.midX, y: p.window.frame.midY), within: .infinity)
+        } else {
+            look(toward: NSEvent.mouseLocation, within: Self.lookDistance)
+        }
+    }
+
+    func look(toward m: NSPoint, within distance: CGFloat) {
         let dx = m.x - window.frame.midX
-        if appearance.face == "normal" && abs(dx) > 30 && hypot(dx, m.y - window.frame.midY) < Self.lookDistance {
+        if appearance.face == "normal" && abs(dx) > 30 && hypot(dx, m.y - window.frame.midY) < distance {
             let look = dx < 0 ? "lookLeft" : "lookRight"
             if character.faces[look] != nil {
                 appearance.face = look

@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class Mascot: NSObject, NSMenuDelegate {
+final class Mascot: NSObject {
     enum State {
         case idle(ticks: Int)
         case walking(ticks: Int)
@@ -19,8 +19,8 @@ final class Mascot: NSObject, NSMenuDelegate {
     static let speed: CGFloat = 2
     static let gravity: CGFloat = 1.2
     static let lookDistance: CGFloat = 300
-    static let restRange = 200...500
-    static let characterKey = "character"
+    static let chatDistance: CGFloat = 200
+    static let restRange = 400...900
     static let outfitKeyPrefix = "outfit."
     static let wornKeyPrefix = "worn."
     static let sitKey = "sitForever"
@@ -45,16 +45,6 @@ final class Mascot: NSObject, NSMenuDelegate {
     var x: CGFloat
     var y: CGFloat
     var screen: NSScreen
-    let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-    let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
-    let characterMenu = NSMenu()
-    let outfitItem = NSMenuItem(title: "衣装", action: nil, keyEquivalent: "")
-    let outfitMenu = NSMenu()
-    let accessoryItem = NSMenuItem(title: "小物", action: nil, keyEquivalent: "")
-    let accessoryMenu = NSMenu()
-    let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
-    let sitItem = NSMenuItem(title: "ウィンドウの上でずっと座る", action: #selector(toggleSitForever), keyEquivalent: "")
-    let loginItem = NSMenuItem(title: "ログイン時に起動", action: #selector(toggleLogin), keyEquivalent: "")
     var snack: Snack?
     var dragDelta = CGVector.zero
     var dragVelocity = CGVector.zero
@@ -69,9 +59,13 @@ final class Mascot: NSObject, NSMenuDelegate {
     var overMascot = false
     var glide: (from: NSPoint, to: NSPoint, start: TimeInterval)?
     var frames = FrameCache()
+    var peers: () -> [Mascot] = { [] }
+    var onHide: (() -> Void)?
+    var timers: [Timer] = []
+    var screenObserver: NSObjectProtocol?
 
-    override init() {
-        character = Self.dressed(MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey)))
+    init(character: MascotCharacter, at fraction: CGFloat = 0.5) {
+        self.character = character
         view = MascotView(character: character)
         window = NSPanel(contentRect: view.frame, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
         window.isOpaque = false
@@ -84,23 +78,31 @@ final class Mascot: NSObject, NSMenuDelegate {
 
         screen = NSScreen.main ?? NSScreen.screens[0]
         let area = screen.visibleFrame
-        x = area.midX
+        x = area.minX + area.width * fraction
         y = area.minY
         super.init()
 
-        buildMenu()
         bindView()
         updatePosition()
         window.orderFrontRegardless()
         startTimers()
 
-        NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
+        screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.screensChanged() }
         }
     }
 
+    func stop() {
+        timers.forEach { $0.invalidate() }
+        timers = []
+        if let screenObserver {
+            NotificationCenter.default.removeObserver(screenObserver)
+        }
+        window.orderOut(nil)
+    }
+
     func bindView() {
-        view.onHide = { [weak self] in self?.setVisible(false) }
+        view.onHide = { [weak self] in self?.onHide?() }
         view.onSit = { [weak self] in self?.toggleSit() }
         view.isSitting = { [weak self] in self?.manualSit ?? false }
         view.onClick = { [weak self] in
@@ -137,13 +139,14 @@ final class Mascot: NSObject, NSMenuDelegate {
     }
 
     func startTimers() {
-        Timer.scheduledTimer(withTimeInterval: 1 / Self.fps, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.step() }
-        }
-
-        Timer.scheduledTimer(withTimeInterval: 1 / Self.glideFps, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.stepGlide() }
-        }
+        timers = [
+            Timer.scheduledTimer(withTimeInterval: 1 / Self.fps, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.step() }
+            },
+            Timer.scheduledTimer(withTimeInterval: 1 / Self.glideFps, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.stepGlide() }
+            },
+        ]
     }
 
     func screensChanged() {
