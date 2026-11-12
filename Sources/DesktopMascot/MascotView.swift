@@ -10,6 +10,7 @@ final class MascotView: NSView {
     var lift: CGFloat = 0
     var cutoff: CGFloat?
     var effect: (glyph: [String], progress: CGFloat, dx: CGFloat)?
+    var effectDrop: CGFloat = 0
     var onClick: (() -> Void)?
     var onDrag: ((CGFloat, CGFloat) -> Void)?
     var onDrop: (() -> Void)?
@@ -58,7 +59,7 @@ final class MascotView: NSView {
         guard let (glyph, p, dx) = effect else { return }
         let hs: CGFloat = 3
         let originX = (bounds.midX + dx - CGFloat(glyph[0].count) * hs / 2).rounded()
-        let originY = top - 6 - (p * 30 / hs).rounded() * hs - CGFloat(glyph.count) * hs
+        let originY = top + effectDrop - 6 - (p * 30 / hs).rounded() * hs - CGFloat(glyph.count) * hs
         for (y, row) in glyph.enumerated() {
             for (x, c) in row.enumerated() {
                 guard let color = character.glyphPalette[c] else { continue }

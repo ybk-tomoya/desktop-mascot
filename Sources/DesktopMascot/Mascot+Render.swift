@@ -48,6 +48,7 @@ extension Mascot {
 
     func render() {
         let a = appearance
+        view.effectDrop = a.walkStep == nil ? CGFloat(character.drops[a.legs] ?? 0) * MascotView.scale : 0
         let key = a.walkStep.map { "walk\($0)\(direction < 0)\(isBlinking)" } ?? "\(a.face)|\(a.arms)|\(a.legs)|\(a.breath)"
         if let cached = frames.sprites[key] {
             view.sprite = cached

@@ -57,10 +57,15 @@ struct CircleDetector {
 }
 
 extension Mascot {
+    var bodyDrop: CGFloat {
+        guard case .acting(let a, let t, _) = state, !a.frames.isEmpty else { return 0 }
+        return CGFloat(character.drops[a.pose(at: t).legs] ?? 0) * MascotView.scale
+    }
+
     func isPetting() -> Bool {
         let f = window.frame
         let spriteHeight = CGFloat(character.height) * MascotView.scale
-        let head = NSRect(x: f.minX, y: f.minY + spriteHeight * 0.55, width: f.width, height: spriteHeight * 0.45 + 8)
+        let head = NSRect(x: f.minX, y: f.minY + spriteHeight * 0.55 - bodyDrop, width: f.width, height: spriteHeight * 0.45 + 8)
         return pet.stroked(mouse: NSEvent.mouseLocation, head: head, tick: tick)
     }
 
