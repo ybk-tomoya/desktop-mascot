@@ -134,6 +134,9 @@ ARM_POSES = {
     "grab": ((LS, (9, 22), (8.5, 4)), (RS, (39, 22), (39.5, 4))),
     "peek": ((LS, (11.5, 35), (9.5, 33)), (RS, (36.5, 35), (38.5, 33))),
     "cheers": (_DOWN_L, (RS, (38.5, 28), (38.5, 20))),
+    "guitarUp": ((LS, (13, 38), (10, 34)), (RS, (34, 38), (28, 39))),
+    "guitarDown": ((LS, (13, 38), (10, 34)), (RS, (34, 39), (29, 43))),
+    "cheeks": ((LS, (11, 33.5), (15, 24.5)), (RS, (37, 33.5), (33, 24.5))),
 }
 STANDARD_ARMS = ("down", "flailLeft", "flailRight", "bothUp", "peace", "heart", "behindHead", "typeLeft", "typeRight", "grab", "peek")
 CUP = [(35.5, 12.5), (41.5, 12.5), (40.5, 18.5), (36.5, 18.5)]

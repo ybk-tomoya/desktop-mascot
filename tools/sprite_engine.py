@@ -81,6 +81,7 @@ CLASS = {
     "loop": "loop", "knot": "knot", "tee": "shirt", "emblem": "shirt", "hoodie": "pajama", "hood": "hood", "pocket": "pocket",
     "denim": "shorts",
     "strap": "strap", "collar": "collar", "cardigan": "cardigan", "turtle": "turtle", "dress": "dress", "sash": "sash",
+    "guitar": "guitar", "fret": "fret", "earring": "earring", "bottle": "bottle",
     "tights": "tights", "boot": "boot", "farboot": "boot", "sneaker": "shoe", "slipper": "slipper",
 }
 
