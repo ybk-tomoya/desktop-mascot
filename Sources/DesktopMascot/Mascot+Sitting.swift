@@ -1,5 +1,9 @@
 import AppKit
 
+enum Corner: String {
+    case left, right
+}
+
 extension Mascot {
     var onWindow: Bool {
         standingOn != nil || ground(below: y).window != nil
@@ -12,11 +16,49 @@ extension Mascot {
 
     var sitForever: Bool { UserDefaults.standard.bool(forKey: Self.sitKey) }
 
+    var isCornerSitting: Bool {
+        if case .acting(let a, _, _) = state { return a.trigger == .corner }
+        return false
+    }
+
+    var cornerTarget: CGFloat? {
+        guard let corner else { return nil }
+        let offset = CGFloat(corner.slot) * Self.cornerSpacing
+        return corner.side == .left ? area.minX + offset : area.maxX - window.frame.width - offset
+    }
+
+    var atCorner: Bool {
+        cornerTarget.map { abs($0 - x) <= Self.speed } ?? false
+    }
+
     func sitAgain() -> MascotAction? {
-        manualSit || (sitForever && onWindow) ? character.sitAction : nil
+        if corner != nil {
+            return atCorner ? character.cornerSitAction : nil
+        }
+        return manualSit || (sitForever && onWindow) ? character.sitAction : nil
+    }
+
+    func setCorner(_ side: Corner?, slot: Int) {
+        corner = side.map { ($0, slot) }
+        switch state {
+        case .idle, .walking, .acting, .fetching, .toCorner:
+            break
+        default:
+            return
+        }
+        if corner != nil {
+            leaveChat()
+            stopSitting()
+            state = .toCorner
+        } else if case .toCorner = state {
+            rest()
+        } else if case .acting(let a, _, _) = state, a.trigger == .corner {
+            rest()
+        }
     }
 
     func toggleSit() {
+        guard corner == nil else { return }
         if manualSit {
             stopSitting()
             rest()

@@ -18,7 +18,7 @@ extension Mascot {
             rest()
             return
         }
-        if (manualSit && !a.sit) || (isSitting && (a.isChat || a.trigger == .near)) {
+        if ((manualSit || isCornerSitting) && !a.sit) || (isSitting && (a.isChat || a.trigger == .near)) {
             react(with: a)
             return
         }
@@ -39,7 +39,7 @@ extension Mascot {
             passTurn(after: a)
             return
         }
-        if a.sit || manualSit, let sit = sitAgain() {
+        if a.sit || manualSit || corner != nil, let sit = sitAgain() {
             start(sit)
             if let p = nearPeer(), Int.random(in: 0..<30) == 0 {
                 _ = startChat(with: p)
@@ -83,6 +83,7 @@ extension Mascot {
         case .dragging(let a, let t): stepDragging(a, t: t)
         case .thrown(let a, let vx, let vy, let t, let strength): stepThrown(a, vx: vx, vy: vy, t: t, strength: strength)
         case .fetching: stepFetching()
+        case .toCorner: stepToCorner()
         case .falling(let a, let v, let t): stepFalling(a, velocity: v, t: t)
         case .jumping(let a, let from, let to, let t, let length): stepJumping(a, from: from, to: to, t: t, length: length)
         }
@@ -95,6 +96,8 @@ extension Mascot {
     func stepIdle(_ ticks: Int) {
         if snack?.landed == true {
             state = .fetching
+        } else if corner != nil, !atCorner {
+            state = .toCorner
         } else if ticks <= 0 {
             if let sit = sitAgain() {
                 start(sit)

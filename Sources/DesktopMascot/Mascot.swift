@@ -10,6 +10,7 @@ final class Mascot: NSObject {
         case falling(MascotAction?, velocity: CGFloat, t: Int)
         case thrown(MascotAction?, vx: CGFloat, vy: CGFloat, t: Int, strength: CGFloat)
         case fetching
+        case toCorner
         case jumping(MascotAction?, from: NSPoint, to: NSPoint, t: Int, length: Int)
     }
 
@@ -25,6 +26,8 @@ final class Mascot: NSObject {
     static let outfitKeyPrefix = "outfit."
     static let wornKeyPrefix = "worn."
     static let sitKey = "sitForever"
+    static let cornerKey = "cornerSit"
+    static let cornerSpacing: CGFloat = 64
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
     static let petTurns = 3
@@ -54,6 +57,7 @@ final class Mascot: NSObject {
     var desktopWindows: [DesktopWindow] = []
     var standingOn: Int?
     var manualSit = false
+    var corner: (side: Corner, slot: Int)?
     var replyDelay: Int?
     var chat: Chat?
     var reaction: (action: MascotAction, t: Int, length: Int)?

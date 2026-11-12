@@ -25,7 +25,7 @@ extension Mascot {
 
     func fallIfUnsupported() {
         switch state {
-        case .idle, .walking, .acting, .fetching:
+        case .idle, .walking, .acting, .fetching, .toCorner:
             if y > ground(below: y).y + 0.5 {
                 fall()
             }
@@ -36,7 +36,7 @@ extension Mascot {
 
     func trackStandingWindow() {
         switch state {
-        case .idle, .walking, .acting:
+        case .idle, .walking, .acting, .toCorner:
             let g = ground(below: y)
             if let w = g.window, abs(y - g.y) < 0.5 {
                 standingOn = w.id
@@ -191,6 +191,21 @@ extension Mascot {
             rest()
         } else {
             state = .falling(a, velocity: v + Self.gravity, t: t + 1)
+        }
+    }
+
+    func stepToCorner() {
+        guard let target = cornerTarget else {
+            rest()
+            return
+        }
+        if abs(target - x) <= Self.speed {
+            x = target
+            start(character.cornerSitAction)
+        } else {
+            direction = target < x ? -1 : 1
+            x += direction * Self.speed
+            appearance.walkStep = (tick / 4) % 4
         }
     }
 }

@@ -20,6 +20,8 @@ final class MascotApp: NSObject, NSMenuDelegate {
     let accessoryMenu = NSMenu()
     let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
     let sitItem = NSMenuItem(title: "ウィンドウの上でずっと座る", action: #selector(toggleSitForever), keyEquivalent: "")
+    let cornerItem = NSMenuItem(title: "すみで座る", action: nil, keyEquivalent: "")
+    let cornerMenu = NSMenu()
     let loginItem = NSMenuItem(title: "ログイン時に起動", action: #selector(toggleLogin), keyEquivalent: "")
     var mascots: [Mascot] = []
     var visible = true
@@ -66,6 +68,13 @@ final class MascotApp: NSObject, NSMenuDelegate {
         menu.addItem(snackItem)
         sitItem.target = self
         menu.addItem(sitItem)
+        for (title, side) in [("右下", Corner.right), ("左下", Corner.left)] {
+            let item = cornerMenu.addItem(withTitle: title, action: #selector(selectCorner(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = side.rawValue
+        }
+        cornerItem.submenu = cornerMenu
+        menu.addItem(cornerItem)
         loginItem.target = self
         menu.addItem(loginItem)
         menu.delegate = self
@@ -88,6 +97,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
             m.setVisible(visible)
             mascots.append(m)
         }
+        applyCorner()
         refreshMenu()
     }
 
@@ -131,6 +141,16 @@ final class MascotApp: NSObject, NSMenuDelegate {
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         sitItem.state = UserDefaults.standard.bool(forKey: Mascot.sitKey) ? .on : .off
+        var cornerTitle = "すみで座る"
+        for item in cornerMenu.items {
+            let on = item.representedObject as? String == corner?.rawValue
+            item.state = on ? .on : .off
+            if on {
+                cornerTitle += "（\(item.title)）"
+            }
+        }
+        cornerItem.title = cornerTitle
+        cornerItem.state = corner == nil ? .off : .on
         loginItem.state = SMAppService.mainApp.status == .enabled ? .on : .off
     }
 
@@ -179,6 +199,22 @@ final class MascotApp: NSObject, NSMenuDelegate {
         self.visible = visible
         mascots.forEach { $0.setVisible(visible) }
         toggleItem.title = visible ? "隠す" : "表示する"
+    }
+
+    var corner: Corner? {
+        UserDefaults.standard.string(forKey: Mascot.cornerKey).flatMap(Corner.init(rawValue:))
+    }
+
+    func applyCorner() {
+        for (i, m) in mascots.enumerated() where m.corner?.side != corner || m.corner?.slot != i {
+            m.setCorner(corner, slot: i)
+        }
+    }
+
+    @objc func selectCorner(_ sender: NSMenuItem) {
+        let side = (sender.representedObject as? String).flatMap(Corner.init(rawValue:))
+        UserDefaults.standard.set(side == corner ? nil : side?.rawValue, forKey: Mascot.cornerKey)
+        applyCorner()
     }
 
     @objc func toggleSitForever() {

@@ -80,7 +80,7 @@ struct MascotSnack {
 
 struct MascotAction {
     enum Trigger {
-        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, near, jump, circle, talk, listen, chained
+        case idle, click, drag, fall, pet, `throw`, land, eat, ledge, wall, top, near, jump, circle, talk, listen, corner, chained
     }
 
     let name: String
@@ -155,6 +155,10 @@ struct MascotCharacter {
 
     var sitAction: MascotAction? {
         actions.first { $0.sit && $0.trigger == .top }
+    }
+
+    var cornerSitAction: MascotAction? {
+        actions.first { $0.sit && $0.trigger == .corner }
     }
 
     func action(named name: String) -> MascotAction? {

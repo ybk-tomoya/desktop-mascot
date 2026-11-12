@@ -5,7 +5,7 @@ YR = range(0)
 
 WALK_STEPS = 4
 REQUIRED = {"faces": ("normal", "blink"), "arms": ("down",), "legs": ("stand",)}
-TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "ledge", "wall", "top", "near", "jump", "circle", "talk", "listen", "chained")
+TRIGGERS = ("idle", "click", "drag", "fall", "pet", "throw", "land", "eat", "ledge", "wall", "top", "near", "jump", "circle", "talk", "listen", "corner", "chained")
 LIFTS = ("jump", "hop", "rise", "sink", "cling")
 
 TERMINAL_APPS = ["com.apple.Terminal", "com.googlecode.iterm2", "com.mitchellh.ghostty", "com.github.wez.wezterm", "org.alacritty",

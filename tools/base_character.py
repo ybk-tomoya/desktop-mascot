@@ -436,6 +436,8 @@ STANDARD_ACTIONS = [
      "frames": [{"face": "blink", "legs": "dangleLeft"}],
      "lift": _SIT_LIFT,
      "next": {"sitTop": 1}},
+    {"name": "sitCorner", "trigger": "corner", "sit": True, "duration": (120, 300),
+     "frames": [{"legs": "sit", "ticks": 60}, {"face": "blink", "legs": "sit", "ticks": 4}, {"legs": "sit", "ticks": 50}, {"face": "smile", "legs": "sit", "ticks": 30}]},
     {"name": "hang", "trigger": "ledge", "weight": 1, "duration": (80, 160),
      "frames": [{"face": "panic", "arms": "grab", "legs": "dangleLeft", "ticks": 6}, {"face": "panic", "arms": "grab", "legs": "dangleRight", "ticks": 6}],
      "lift": {"type": "sink", "height": 124}},
