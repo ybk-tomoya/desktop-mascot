@@ -99,10 +99,11 @@ extension Mascot {
     }
 
     func lookAround() {
-        if let p = nearPeer() {
+        let m = NSEvent.mouseLocation
+        if hypot(m.x - window.frame.midX, m.y - window.frame.midY) >= Self.lookDistance, let p = nearPeer() {
             look(toward: NSPoint(x: p.window.frame.midX, y: p.window.frame.midY), within: .infinity)
         } else {
-            look(toward: NSEvent.mouseLocation, within: Self.lookDistance)
+            look(toward: m, within: Self.lookDistance)
         }
     }
 
