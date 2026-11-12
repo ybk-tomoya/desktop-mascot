@@ -6,6 +6,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
     static let characterKey = "character"
     static let modeKey = "mode"
     static let everyoneMode = "all"
+    static let excludedKey = "everyoneExcluded"
 
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     let toggleItem = NSMenuItem(title: "隠す", action: #selector(toggleVisible), keyEquivalent: "")
@@ -25,6 +26,11 @@ final class MascotApp: NSObject, NSMenuDelegate {
 
     var everyone: Bool {
         UserDefaults.standard.string(forKey: Self.modeKey) == Self.everyoneMode
+    }
+
+    var excluded: Set<String> {
+        get { Set(UserDefaults.standard.stringArray(forKey: Self.excludedKey) ?? []) }
+        set { UserDefaults.standard.set(Array(newValue), forKey: Self.excludedKey) }
     }
 
     override init() {
@@ -70,7 +76,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
 
     func applyMode() {
         let primary = MascotCharacter.named(UserDefaults.standard.string(forKey: Self.characterKey))
-        let wanted = everyone ? MascotCharacter.all : [primary]
+        let wanted = everyone ? MascotCharacter.all.filter { !excluded.contains($0.id) } : [primary]
         let ids = wanted.map(\.id)
         mascots.filter { !ids.contains($0.character.id) }.forEach { $0.stop() }
         mascots.removeAll { !ids.contains($0.character.id) }
@@ -87,10 +93,9 @@ final class MascotApp: NSObject, NSMenuDelegate {
     func refreshMenu() {
         soloItem.state = everyone ? .off : .on
         everyoneItem.state = everyone ? .on : .off
-        characterItem.isEnabled = !everyone
-        let current = mascots.first?.character.id
+        let shown = everyone ? mascots.map(\.character.id) : mascots.prefix(1).map(\.character.id)
         for item in characterMenu.items {
-            item.state = item.representedObject as? String == current ? .on : .off
+            item.state = shown.contains(item.representedObject as? String ?? "") ? .on : .off
         }
         snackItem.isEnabled = mascots.contains { $0.character.snack != nil }
         refreshWardrobe()
@@ -135,6 +140,15 @@ final class MascotApp: NSObject, NSMenuDelegate {
 
     @objc func selectCharacter(_ sender: NSMenuItem) {
         let c = MascotCharacter.named(sender.representedObject as? String)
+        if everyone {
+            if excluded.contains(c.id) {
+                excluded.remove(c.id)
+            } else if mascots.count > 1 {
+                excluded.insert(c.id)
+            }
+            applyMode()
+            return
+        }
         UserDefaults.standard.set(c.id, forKey: Self.characterKey)
         mascots.first?.setCharacter(c)
         refreshMenu()
