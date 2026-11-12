@@ -136,7 +136,7 @@ final class Mascot: NSObject {
             if let s = NSScreen.screens.first(where: { $0.frame.contains(center) }) {
                 screen = s
             }
-            if corner != nil {
+            if corner != nil && !manualSit {
                 onCornerDrop?()
             }
             let strength = hypot(dragVelocity.dx, dragVelocity.dy)

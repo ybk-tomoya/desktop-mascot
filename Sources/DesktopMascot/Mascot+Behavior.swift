@@ -40,7 +40,10 @@ extension Mascot {
             return
         }
         if a.sit || manualSit || corner != nil || sitForever, let sit = sitAgain() {
-            start(sit)
+            let next = a.sit ? a.next.first { name, chance in
+                Double.random(in: 0..<1) < chance && character.action(named: name)?.sit == true
+            }.flatMap { character.action(named: $0.0) } : nil
+            start(next ?? sit)
             if let p = nearPeer(), Int.random(in: 0..<30) == 0 {
                 _ = startChat(with: p)
             }
@@ -98,6 +101,8 @@ extension Mascot {
             state = .fetching
         } else if corner != nil, !atCorner {
             state = .toCorner
+        } else if corner != nil || sitForever, let sit = sitAgain() {
+            start(sit)
         } else if ticks <= 0 {
             if let sit = sitAgain() {
                 start(sit)

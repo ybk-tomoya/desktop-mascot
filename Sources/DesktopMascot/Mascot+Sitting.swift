@@ -17,8 +17,7 @@ extension Mascot {
     var sitForever: Bool { UserDefaults.standard.bool(forKey: Self.sitKey) }
 
     var isCornerSitting: Bool {
-        if case .acting(let a, _, _) = state { return a.trigger == .corner }
-        return false
+        corner != nil && atCorner && isSitting
     }
 
     var cornerTarget: CGFloat? {
@@ -32,13 +31,13 @@ extension Mascot {
     }
 
     func sitAgain() -> MascotAction? {
-        if corner != nil {
-            return atCorner ? character.cornerSitAction : nil
-        }
         if manualSit {
             return character.sitAction
         }
-        return sitForever ? (onWindow ? character.sitAction : character.cornerSitAction) : nil
+        if corner != nil {
+            return atCorner ? character.sitAction : nil
+        }
+        return sitForever ? character.sitAction : nil
     }
 
     func updateSitForever() {
@@ -68,7 +67,9 @@ extension Mascot {
     }
 
     func setCorner(_ side: Corner?, slot: Int) {
+        let wasCornerSitting = isCornerSitting
         corner = side.map { ($0, slot) }
+        guard !manualSit else { return }
         switch state {
         case .idle, .walking, .acting, .fetching, .toCorner:
             break
@@ -81,13 +82,12 @@ extension Mascot {
             state = .toCorner
         } else if case .toCorner = state {
             standOrKeepSitting()
-        } else if case .acting(let a, _, _) = state, a.trigger == .corner {
+        } else if wasCornerSitting {
             standOrKeepSitting()
         }
     }
 
     func toggleSit() {
-        guard corner == nil else { return }
         if manualSit {
             stopSitting()
             rest()
@@ -96,6 +96,7 @@ extension Mascot {
         switch state {
         case .idle, .walking, .acting, .falling, .thrown:
             guard let a = character.sitAction else { return }
+            leaveChat()
             start(a)
             manualSit = true
         default:

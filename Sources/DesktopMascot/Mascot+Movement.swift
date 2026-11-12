@@ -201,7 +201,7 @@ extension Mascot {
         }
         if abs(target - x) <= Self.speed {
             x = target
-            start(character.cornerSitAction)
+            start(character.sitAction)
         } else {
             direction = target < x ? -1 : 1
             x += direction * Self.speed
