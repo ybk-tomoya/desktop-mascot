@@ -6,7 +6,7 @@ macOS のデスクトップマスコットアプリ（Swift / AppKit、Xcode プ
 - 再起動: `pkill -x DesktopMascot; open build/DesktopMascot.app`
 - 変更後はビルドしてアプリを再起動し、ユーザーがすぐ実物を見られるようにする
 - `Sources/DesktopMascot/main.swift`: 起動処理だけ
-- `Sources/DesktopMascot/MascotApp.swift`: メニューバーのメニュー（モード・キャラ・衣装と小物・おやつ・座る・すみで座る・ログイン）と、`Mascot` の生成と破棄。モードは「ひとり」（選んだキャラ1体）と「みんな」（登録済みのキャラのうち「キャラ」メニューでチェックしたもの。外したキャラは `everyoneExcluded` に保存するので、新しいキャラは最初から入る）
+- `Sources/DesktopMascot/MascotApp.swift`: メニューバーのメニュー（モード・キャラ・衣装と小物・おやつ・座る・すみで座る・ログイン）と、`Mascot` の生成と破棄、すみで座る並び順（すみで座っているキャラをドラッグして列の中で離すと、その位置に割り込む。順番は `cornerOrder` に保存）。モードは「ひとり」（選んだキャラ1体）と「みんな」（登録済みのキャラのうち「キャラ」メニューでチェックしたもの。外したキャラは `everyoneExcluded` に保存するので、新しいキャラは最初から入る）
 - `Sources/DesktopMascot/Mascot.swift`: 1体分のウィンドウの作成・マウス入力の受け口・タイマーと、状態を持つ変数（extension には保存プロパティを置けないのでここに残す）
 - `Sources/DesktopMascot/Mascot+Wardrobe.swift`: キャラ・衣装・小物の切り替えと、おやつ（メニューからは `MascotApp` 経由で呼ぶ）
 - `Sources/DesktopMascot/Mascot+Peers.swift`: 近くにいる他の `Mascot` の検出と、おしゃべり（`talk`/`listen` を交代で再生し、最後に2体とも `near` の反応）

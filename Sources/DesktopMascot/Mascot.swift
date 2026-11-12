@@ -27,6 +27,7 @@ final class Mascot: NSObject {
     static let wornKeyPrefix = "worn."
     static let sitKey = "sitForever"
     static let cornerKey = "cornerSit"
+    static let cornerOrderKey = "cornerOrder"
     static let cornerSpacing: CGFloat = 64
     static let throwSpeed: CGFloat = 6
     static let bounceSpeed: CGFloat = 8
@@ -68,6 +69,7 @@ final class Mascot: NSObject {
     var frames = FrameCache()
     var peers: () -> [Mascot] = { [] }
     var onHide: (() -> Void)?
+    var onCornerDrop: (() -> Void)?
     var timers: [Timer] = []
     var screenObserver: NSObjectProtocol?
 
@@ -133,6 +135,9 @@ final class Mascot: NSObject {
             let center = NSPoint(x: x + window.frame.width / 2, y: y + window.frame.height / 2)
             if let s = NSScreen.screens.first(where: { $0.frame.contains(center) }) {
                 screen = s
+            }
+            if corner != nil {
+                onCornerDrop?()
             }
             let strength = hypot(dragVelocity.dx, dragVelocity.dy)
             if manualSit, let sit = sitAgain() {

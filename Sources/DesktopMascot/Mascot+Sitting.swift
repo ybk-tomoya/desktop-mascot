@@ -35,7 +35,36 @@ extension Mascot {
         if corner != nil {
             return atCorner ? character.cornerSitAction : nil
         }
-        return manualSit || (sitForever && onWindow) ? character.sitAction : nil
+        if manualSit {
+            return character.sitAction
+        }
+        return sitForever ? (onWindow ? character.sitAction : character.cornerSitAction) : nil
+    }
+
+    func updateSitForever() {
+        guard corner == nil, !manualSit else { return }
+        switch state {
+        case .idle, .walking, .acting, .fetching:
+            break
+        default:
+            return
+        }
+        if sitForever {
+            if !isSitting {
+                leaveChat()
+                start(sitAgain())
+            }
+        } else if isSitting {
+            rest()
+        }
+    }
+
+    func standOrKeepSitting() {
+        if sitForever, let sit = sitAgain() {
+            start(sit)
+        } else {
+            rest()
+        }
     }
 
     func setCorner(_ side: Corner?, slot: Int) {
@@ -51,9 +80,9 @@ extension Mascot {
             stopSitting()
             state = .toCorner
         } else if case .toCorner = state {
-            rest()
+            standOrKeepSitting()
         } else if case .acting(let a, _, _) = state, a.trigger == .corner {
-            rest()
+            standOrKeepSitting()
         }
     }
 

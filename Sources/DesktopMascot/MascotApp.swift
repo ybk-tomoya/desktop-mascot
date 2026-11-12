@@ -19,7 +19,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
     let accessoryItem = NSMenuItem(title: "小物", action: nil, keyEquivalent: "")
     let accessoryMenu = NSMenu()
     let snackItem = NSMenuItem(title: "おやつをあげる", action: #selector(giveSnack), keyEquivalent: "")
-    let sitItem = NSMenuItem(title: "ウィンドウの上でずっと座る", action: #selector(toggleSitForever), keyEquivalent: "")
+    let sitItem = NSMenuItem(title: "ずっと座る", action: #selector(toggleSitForever), keyEquivalent: "")
     let cornerItem = NSMenuItem(title: "すみで座る", action: nil, keyEquivalent: "")
     let cornerMenu = NSMenu()
     let loginItem = NSMenuItem(title: "ログイン時に起動", action: #selector(toggleLogin), keyEquivalent: "")
@@ -94,6 +94,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
             m.state = .idle(ticks: 40 + i * 60)
             m.peers = { [weak self] in self?.mascots ?? [] }
             m.onHide = { [weak self] in self?.setVisible(false) }
+            m.onCornerDrop = { [weak self, weak m] in m.map { self?.cornerDropped($0) } }
             m.setVisible(visible)
             mascots.append(m)
         }
@@ -205,10 +206,28 @@ final class MascotApp: NSObject, NSMenuDelegate {
         UserDefaults.standard.string(forKey: Mascot.cornerKey).flatMap(Corner.init(rawValue:))
     }
 
+    var cornerOrder: [Mascot] {
+        let ids = UserDefaults.standard.stringArray(forKey: Mascot.cornerOrderKey) ?? []
+        return mascots.enumerated().sorted { a, b in
+            (ids.firstIndex(of: a.element.character.id) ?? Int.max, a.offset) < (ids.firstIndex(of: b.element.character.id) ?? Int.max, b.offset)
+        }.map(\.element)
+    }
+
     func applyCorner() {
-        for (i, m) in mascots.enumerated() where m.corner?.side != corner || m.corner?.slot != i {
+        for (i, m) in cornerOrder.enumerated() where m.corner?.side != corner || m.corner?.slot != i {
             m.setCorner(corner, slot: i)
         }
+    }
+
+    func cornerDropped(_ m: Mascot) {
+        guard let side = corner else { return }
+        let distance = side == .left ? m.x - m.area.minX : m.area.maxX - m.window.frame.width - m.x
+        var order = cornerOrder.filter { $0 !== m }
+        order.insert(m, at: min(max(Int((distance / Mascot.cornerSpacing).rounded()), 0), order.count))
+        let shown = order.map(\.character.id)
+        let hidden = (UserDefaults.standard.stringArray(forKey: Mascot.cornerOrderKey) ?? []).filter { !shown.contains($0) }
+        UserDefaults.standard.set(shown + hidden, forKey: Mascot.cornerOrderKey)
+        applyCorner()
     }
 
     @objc func selectCorner(_ sender: NSMenuItem) {
@@ -219,6 +238,7 @@ final class MascotApp: NSObject, NSMenuDelegate {
 
     @objc func toggleSitForever() {
         UserDefaults.standard.set(!UserDefaults.standard.bool(forKey: Mascot.sitKey), forKey: Mascot.sitKey)
+        mascots.forEach { $0.updateSitForever() }
     }
 
     @objc func toggleLogin() {

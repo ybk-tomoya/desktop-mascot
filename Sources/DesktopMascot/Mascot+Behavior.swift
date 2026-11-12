@@ -39,7 +39,7 @@ extension Mascot {
             passTurn(after: a)
             return
         }
-        if a.sit || manualSit || corner != nil, let sit = sitAgain() {
+        if a.sit || manualSit || corner != nil || sitForever, let sit = sitAgain() {
             start(sit)
             if let p = nearPeer(), Int.random(in: 0..<30) == 0 {
                 _ = startChat(with: p)
