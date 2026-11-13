@@ -58,8 +58,8 @@ def front_clothes(L, outfit):
         L.paint(rect(22, 25, 26, 28) + poly([(19, 28), (29, 28), (24, 34)]), "S", "throat")
         L.paint(line((19, 28.5), (24, 34), 0.6) + line((29, 28.5), (24, 34), 0.6), "c", "collar")
     else:
-        L.paint(poly([(17, 29), (31, 29), (33, 32), (34, 40), (36, 48), (12, 48), (14, 40), (15, 32)]), "Q", "pajama")
-        L.shade(rect(14, 39, 34, 39) + rect(12, 47, 36, 47) + rect(16, 33, 32, 33), "q", {"pajama"})
+        L.paint(poly([(17, 29), (31, 29), (33, 32), (34, 41), (36, 50), (12, 50), (14, 41), (15, 32)]), "Q", "pajama")
+        L.shade(rect(14, 40, 34, 40) + rect(12, 49, 36, 49) + rect(16, 33, 32, 33), "q", {"pajama"})
         L.shade([(24, 30), (24, 32)], "W", {"pajama"})
         L.paint(rect(22, 25, 26, 28) + rect(20, 28, 28, 30), "S", "throat")
         L.shade(rect(22, 29, 26, 29), "s", {"throat"})
@@ -67,9 +67,9 @@ def front_clothes(L, outfit):
 
 def front_body(outfit):
     L = Layer()
-    L.paint(ellipse(*HEAD) + poly([(10.5, 15), (37.5, 15), (39.5, 28), (40, 40), (38.5, 50), (35, 52), (13, 52), (9.5, 50), (8, 40), (8.5, 28)]),
+    L.paint(ellipse(*HEAD) + poly([(10.5, 15), (37.5, 15), (39.5, 28), (39.5, 38), (37.5, 44), (34, 46), (14, 46), (10.5, 44), (8.5, 38), (8.5, 28)]),
             "H", "hairback")
-    L.shade(line((11, 30), (10.5, 48), 0.5) + line((37, 30), (37.5, 48), 0.5), "G", {"hairback"})
+    L.shade(line((11, 30), (10.5, 42), 0.5) + line((37, 30), (37.5, 42), 0.5), "G", {"hairback"})
     front_clothes(L, outfit)
     paint_face(L)
     L.paint(poly(LOCK_L) + poly(LOCK_R), "H", "lock")
@@ -90,15 +90,15 @@ def side_clothes(L, outfit):
         L.shade(rect(16, 53, 32, 53), "v", {"dress"})
         L.paint(rect(21, 25, 25, 28) + poly([(24, 28), (28, 28), (27, 32)]), "S", "throat")
     else:
-        L.paint(poly([(19.5, 29), (27.5, 29), (29, 32), (29.5, 40), (31, 48), (17, 48), (18, 40), (19, 32)]), "Q", "pajama")
-        L.shade(rect(17, 39, 30, 39) + rect(16, 47, 32, 47), "q", {"pajama"})
+        L.paint(poly([(19.5, 29), (27.5, 29), (29, 32), (29.5, 41), (31, 50), (17, 50), (18, 41), (19, 32)]), "Q", "pajama")
+        L.shade(rect(17, 40, 30, 40) + rect(16, 49, 32, 49), "q", {"pajama"})
         L.paint(rect(21, 25, 25, 28) + rect(24, 28, 27, 30), "S", "throat")
 
 
 def side_body(outfit, left=False):
     L = Layer()
-    L.paint(hs(ellipse(SX, 15, 13, 13) + poly([(10, 15), (22, 15), (22.5, 32), (20.5, 46), (15, 52), (10, 46), (8.5, 30)])), "H", "hairback")
-    L.shade(hs(line((12.5, 22), (13.5, 46), 0.6)), "G", {"hairback"})
+    L.paint(hs(ellipse(SX, 15, 13, 13) + poly([(10, 15), (22, 15), (22.5, 32), (21, 42), (16, 46.5), (10, 43), (8.5, 30)])), "H", "hairback")
+    L.shade(hs(line((12.5, 22), (13.5, 41), 0.6)), "G", {"hairback"})
     side_clothes(L, outfit)
     paint_side_face(L)
     L.paint(hs(poly([(21, 12), (25, 12), (26.5, 20), (27, 28), (25.5, 35), (26, 42), (23, 45), (22, 36), (21.5, 24)])), "H", "sidelock")
@@ -117,7 +117,7 @@ SLEEVES = {
 }
 
 LEGWEAR = {
-    "tiered": legwear(hip=48, tights=("J", "j"), shoe=("sneaker", "Q", "W")),
+    "tiered": legwear(hip=50, tights=("J", "j"), shoe=("sneaker", "Q", "W")),
     "vneck": legwear(sock="x", shoe=("sneaker", "u", "c")),
 }
 

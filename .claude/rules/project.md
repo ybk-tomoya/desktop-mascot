@@ -2,6 +2,8 @@
 
 macOS のデスクトップマスコットアプリ（Swift / AppKit、Xcode プロジェクトなし）。
 
+- ユーザーへの返答は日本語で書く
+
 - ビルド: `./build.sh`（スプライト生成 → `swiftc` で `build/DesktopMascot.app` を作る）
 - 再起動: `pkill -x DesktopMascot; open build/DesktopMascot.app`
 - 変更後はビルドしてアプリを再起動し、ユーザーがすぐ実物を見られるようにする
